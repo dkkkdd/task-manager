@@ -15,28 +15,49 @@ export async function getTasks(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const projectId = normalizeId(req.query.projectId as any);
-    const isDoneRaw = req.query.isDone;
+    const { projectId, isDone, deadline, deadlineBefore } = req.query;
 
-    const isDoneFilter =
-      isDoneRaw === "true" ? true : isDoneRaw === "false" ? false : undefined;
+    const where: any = {
+      userId,
+      parentId: null,
+    };
+
+    if (projectId === "null") {
+      where.projectId = null;
+    } else if (projectId) {
+      where.projectId = projectId;
+    }
+
+    if (isDone !== undefined) {
+      where.isDone = isDone === "true";
+    }
+
+    if (deadline) {
+      const day = new Date(deadline as string);
+      const start = new Date(day.setHours(0, 0, 0, 0));
+      const end = new Date(day.setHours(23, 59, 59, 999));
+
+      where.deadline = {
+        gte: start,
+        lte: end,
+      };
+    }
+
+    if (deadlineBefore) {
+      where.deadline = {
+        lt: new Date(deadlineBefore as string),
+      };
+      where.isDone = false;
+    }
 
     const tasks = await prisma.task.findMany({
-      where: {
-        userId,
-        parentId: null,
-        projectId: projectId ?? undefined,
-        isDone: isDoneFilter,
-      },
+      where,
       include: {
         subtasks: {
-          orderBy: [{ isDone: "asc" }, { order: "asc" }],
+          orderBy: { order: "asc" },
         },
       },
-      orderBy:
-        isDoneFilter === true
-          ? [{ completedAt: "desc" }, { order: "asc" }]
-          : [{ isDone: "asc" }, { order: "asc" }],
+      orderBy: [{ isDone: "asc" }, { order: "asc" }],
     });
 
     res.json(tasks);
