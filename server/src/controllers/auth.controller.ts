@@ -6,8 +6,6 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
 
 function setAuthCookie(res: Response, token: string) {
-  const isProduction = process.env.NODE_ENV === "production";
-
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: true,
