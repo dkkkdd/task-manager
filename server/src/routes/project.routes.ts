@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   getProjects,
-  getProjectBoard,
   createProject,
   updateProject,
   deleteProject,
@@ -12,7 +11,6 @@ const router = Router();
 
 router.use(authMiddleware);
 router.get("/", getProjects);
-router.get("/:id", getProjectBoard);
 router.post("/", createProject);
 router.patch("/:id", updateProject);
 router.delete("/:id", deleteProject);

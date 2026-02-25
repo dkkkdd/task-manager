@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
+import {
+  UpdateSectionSchema,
+  CreateSectionSchema,
+} from "../schemas/section.schema";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -12,7 +16,11 @@ function normalizeId(id: string | string[] | undefined): string | undefined {
 
 export async function createSection(req: AuthenticatedRequest, res: Response) {
   try {
-    const { title, projectId, order } = req.body;
+    const validation = CreateSectionSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.format() });
+    }
+    const { title, projectId, order } = validation.data;
     const userId = req.userId;
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -48,7 +56,11 @@ export async function updateSection(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
     const id = normalizeId(req.params.id);
-    const { title, order } = req.body;
+    const validation = UpdateSectionSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.format() });
+    }
+    const { title, order } = validation.data;
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     if (!id) return res.status(400).json({ error: "Section id is required" });

@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
+import {
+  UpdateUserSchema,
+  CreateUserSchema,
+  LoginUserSchema,
+} from "../schemas/auth.schema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -19,13 +24,13 @@ interface AuthenticatedRequest extends Request {
 }
 
 export async function register(req: Request, res: Response) {
-  const { userName, email, password } = req.body;
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-  if (existingUser) {
-    return res.status(400).json({ error: "User already exists" });
+  const validation = CreateUserSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.format() });
   }
+
+  const { userName, password, email } = validation.data;
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
@@ -57,6 +62,9 @@ export async function register(req: Request, res: Response) {
       },
     });
   } catch (error) {
+    if ((error as any).code === "P2002") {
+      return res.status(400).json({ error: "User already exists" });
+    }
     console.error("Register Error:", error);
     res.status(500).json({ error: "Failed to register user" });
   }
@@ -94,7 +102,11 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
 
 export async function updateMe(req: AuthenticatedRequest, res: Response) {
   const userId = req.userId;
-  const { userName, email } = req.body;
+  const validation = UpdateUserSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.format() });
+  }
+  const { userName, email } = validation.data;
 
   try {
     const user = await prisma.user.update({
@@ -122,7 +134,12 @@ export async function updateMe(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
+  const validation = LoginUserSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.format() });
+  }
+  const { password, email } = validation.data;
+
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }

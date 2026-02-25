@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
+import {
+  UpdateProjectSchema,
+  CreateProjectSchema,
+} from "../schemas/project.schema";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -29,66 +33,22 @@ export async function getProjects(req: AuthenticatedRequest, res: Response) {
   res.json(projects);
 }
 
-export async function getProjectBoard(
-  req: AuthenticatedRequest,
-  res: Response,
-) {
-  const userId = requireUser(req, res);
-  if (!userId) return;
-
-  const { id } = req.params;
-
-  const project = await prisma.project.findFirst({
-    where: { id: String(id), userId },
-    include: {
-      sections: {
-        orderBy: { order: "asc" },
-        include: {
-          tasks: {
-            where: { parentId: null },
-            orderBy: { order: "asc" },
-            include: {
-              subtasks: { orderBy: { order: "asc" } },
-            },
-          },
-        },
-      },
-      tasks: {
-        where: {
-          sectionId: null,
-          parentId: null,
-        },
-        orderBy: { order: "asc" },
-        include: {
-          subtasks: { orderBy: { order: "asc" } },
-        },
-      },
-    },
-  });
-
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
-  }
-
-  res.json(project);
-}
-
 export async function createProject(req: AuthenticatedRequest, res: Response) {
   const userId = requireUser(req, res);
   if (!userId) return;
 
-  const { title, color, favorites, order } = req.body;
-
-  if (!title?.trim()) {
-    return res.status(400).json({ error: "Title is required" });
+  const validation = CreateProjectSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.format() });
   }
+  const { title, color, favorites, order } = validation.data;
 
   const project = await prisma.project.create({
     data: {
       title: title.trim(),
-      color: color ?? null,
-      favorites: favorites ?? false,
-      order: order ?? 0,
+      color,
+      favorites,
+      order,
       userId,
     },
   });
@@ -101,27 +61,36 @@ export async function updateProject(req: AuthenticatedRequest, res: Response) {
   if (!userId) return;
 
   const { id } = req.params;
-  const { title, color, favorites, order } = req.body;
 
-  const existing = await prisma.project.findFirst({
-    where: { id: String(id), userId },
-  });
-
-  if (!existing) {
-    return res.status(404).json({ error: "Project not found" });
+  const validation = UpdateProjectSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ error: validation.error.format() });
   }
 
-  const updated = await prisma.project.update({
-    where: { id: String(id) },
-    data: {
-      ...(title !== undefined && { title: title.trim() }),
-      ...(color !== undefined && { color }),
-      ...(favorites !== undefined && { favorites }),
-      ...(order !== undefined && { order: Number(order) }),
-    },
-  });
+  const data = validation.data;
 
-  res.json(updated);
+  try {
+    const updated = await prisma.project.update({
+      where: {
+        id: String(id),
+        userId: userId,
+      },
+      data: {
+        ...(data.title && { title: data.title.trim() }),
+        color: data.color,
+        favorites: data.favorites,
+        order: data.order,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(404)
+      .json({ error: "Project not found or access denied" });
+  }
 }
 
 export async function deleteProject(req: AuthenticatedRequest, res: Response) {
@@ -130,17 +99,19 @@ export async function deleteProject(req: AuthenticatedRequest, res: Response) {
 
   const { id } = req.params;
 
-  const existing = await prisma.project.findFirst({
-    where: { id: String(id), userId },
-  });
+  try {
+    const result = await prisma.project.deleteMany({
+      where: {
+        id: String(id),
+        userId: userId,
+      },
+    });
 
-  if (!existing) {
-    return res.status(404).json({ error: "Project not found" });
+    if (result.count === 0) {
+      return res.status(404).json({ error: "projects.not_found" });
+    }
+    res.status(204).send();
+  } catch (error) {
+    return res.status(500).json({ error: "server_error" });
   }
-
-  await prisma.project.delete({
-    where: { id: String(id) },
-  });
-
-  res.status(204).send();
 }

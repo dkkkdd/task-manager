@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
+import { UpdateTaskSchema, CreateTaskSchema } from "../schemas/task.schema";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -72,6 +73,10 @@ export async function createTask(req: AuthenticatedRequest, res: Response) {
     const userId = req.userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
+    const validation = CreateTaskSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.format() });
+    }
     const {
       title,
       projectId,
@@ -81,11 +86,7 @@ export async function createTask(req: AuthenticatedRequest, res: Response) {
       deadline,
       priority,
       reminderAt,
-    } = req.body;
-
-    if (!title?.trim()) {
-      return res.status(400).json({ error: "Title is required" });
-    }
+    } = validation.data;
 
     const lastTask = await prisma.task.findFirst({
       where: {
@@ -100,7 +101,7 @@ export async function createTask(req: AuthenticatedRequest, res: Response) {
 
     const task = await prisma.task.create({
       data: {
-        title: title.trim(),
+        title,
         userId,
 
         projectId: projectId ?? null,
@@ -132,18 +133,17 @@ export async function updateTask(req: AuthenticatedRequest, res: Response) {
     const taskId = normalizeId(req.params.id);
     if (!taskId) return res.status(400).json({ error: "Task id required" });
 
-    const data = { ...req.body };
-
-    delete data.userId;
-    delete data.id;
-    delete data.subtasks;
-
+    const validation = UpdateTaskSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.format() });
+    }
+    const data = validation.data;
     if (data.deadline) {
       data.deadline = new Date(data.deadline);
     }
 
     if (data.reminderAt !== undefined) {
-      data.reminderAt = data.reminderAt || null;
+      data.reminderAt = data.reminderAt;
     }
 
     const updatedTask = await prisma.task.update({
@@ -179,7 +179,7 @@ export async function deleteTask(req: AuthenticatedRequest, res: Response) {
     const taskId = normalizeId(req.params.id);
     if (!taskId) return res.status(400).json({ error: "Task id required" });
 
-    await prisma.task.delete({
+    await prisma.task.deleteMany({
       where: {
         id: taskId,
         userId,
