@@ -35,10 +35,32 @@ export const useTasksActions = () => {
   return context;
 };
 
-export function TasksProvider({ children }: TasksProviderProps) {
+export function TasksProvider({
+  children,
+  mode,
+  selectedProjectId,
+}: TasksProviderProps) {
   const { user } = useAuth();
+  const filters = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+
+    switch (mode) {
+      case "project":
+        return { projectId: selectedProjectId };
+      case "today":
+        return { deadline: today };
+      case "inbox":
+        return { projectId: null };
+      case "completed":
+        return { isDone: true };
+      case "overdue":
+        return { deadlineBefore: today, isDone: false };
+      default:
+        return {};
+    }
+  }, [mode, selectedProjectId]);
   const { tasks, loading, createTask, deleteTask, updateTask, updateDone } =
-    useTasks(user?.id || "");
+    useTasks(user?.id || "", filters);
 
   const actions = useMemo(
     () => ({

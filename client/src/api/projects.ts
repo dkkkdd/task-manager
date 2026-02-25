@@ -2,8 +2,9 @@ import { api } from "@/api/client";
 import type { Project } from "@/types/project";
 
 export const projectsApi = {
-  fetchProjects: () => api.get<Project[]>("/projects"),
-  fetchProjectBoard: (id: string) => api.get<Project>(`/projects/${id}`),
+  fetchProjects: (signal?: AbortSignal) =>
+    api.get<Project[]>("/projects", { signal }),
+
   createProject: (data: { title: string; color: string; favorites: boolean }) =>
     api.post<Project>("/projects", data),
 

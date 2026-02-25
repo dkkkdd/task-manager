@@ -2,13 +2,13 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
+  signal?: AbortSignal;
 }
-
 async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const { body, ...customConfig } = options;
+  const { body, signal, ...customConfig } = options;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -16,36 +16,47 @@ async function apiRequest<T>(
 
   const config: RequestInit = {
     ...customConfig,
+    signal,
     headers: { ...headers, ...customConfig.headers },
+    credentials: "include",
   };
 
-  if (body) config.body = JSON.stringify(body);
+  if (body !== undefined) config.body = JSON.stringify(body);
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...config,
-    credentials: "include",
-  });
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
-  if (!response.ok) {
-    let errorMessage = "Something went wrong";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch {
-      errorMessage = response.statusText;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.error || errorData.message || response.statusText;
+
+      if (response.status === 401) {
+        console.warn("Unauthorized! Redirecting...");
+        // window.location.href = "/login";
+      }
+
+      throw new Error(errorMessage);
     }
-    throw new Error(errorMessage);
-  }
 
-  if (response.status === 204) return {} as T;
-  return response.json();
+    if (response.status === 204) return {} as T;
+
+    return await response.json();
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      return new Promise(() => {});
+    }
+    throw error;
+  }
 }
 
 export const api = {
-  get: <T>(url: string) => apiRequest<T>(url, { method: "GET" }),
-  post: <T>(url: string, body: unknown) =>
-    apiRequest<T>(url, { method: "POST", body }),
-  patch: <T>(url: string, body: unknown) =>
-    apiRequest<T>(url, { method: "PATCH", body }),
-  delete: <T>(url: string) => apiRequest<T>(url, { method: "DELETE" }),
+  get: <T>(url: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(url, { ...options, method: "GET" }),
+  post: <T>(url: string, body: unknown, options?: ApiRequestOptions) =>
+    apiRequest<T>(url, { ...options, method: "POST", body }),
+  patch: <T>(url: string, body: unknown, options?: ApiRequestOptions) =>
+    apiRequest<T>(url, { ...options, method: "PATCH", body }),
+  delete: <T>(url: string, options?: ApiRequestOptions) =>
+    apiRequest<T>(url, { ...options, method: "DELETE" }),
 };

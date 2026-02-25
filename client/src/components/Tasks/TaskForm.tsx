@@ -39,6 +39,7 @@ export const TaskForm = ({
   onStartAddSubtask,
   onClose,
 }: TaskFormProps) => {
+  // if (!openForm) return null;
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { mode } = useProjectsContext();

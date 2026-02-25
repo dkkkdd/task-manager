@@ -31,7 +31,7 @@ export const TaskList = () => {
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>(
     {},
   );
-
+  console.log("render");
   const showContent = ready && !loading;
 
   const toggleTask = useCallback((taskId: string) => {

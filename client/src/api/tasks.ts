@@ -1,7 +1,7 @@
 import { api } from "@/api//client";
 import type { Task } from "@/types/tasks";
 
-type FetchTasksParams = {
+export type FetchTasksParams = {
   projectId?: string | null;
   sectionId?: string | null;
   parentId?: string | null;
@@ -11,7 +11,7 @@ type FetchTasksParams = {
 };
 
 export const tasksApi = {
-  fetchTasks: (params?: FetchTasksParams) => {
+  fetchTasks: (params?: FetchTasksParams, signal?: AbortSignal) => {
     const query = new URLSearchParams();
 
     if (params) {
@@ -22,8 +22,9 @@ export const tasksApi = {
       });
     }
 
-    return api.get<Task[]>(`/tasks?${query.toString()}`);
+    return api.get<Task[]>(`/tasks?${query.toString()}`, { signal });
   },
+
   createTask: (data: Partial<Task>) => api.post<Task>("/tasks", data),
 
   updateInfo: (id: string, data: Partial<Task>) =>
@@ -33,18 +34,4 @@ export const tasksApi = {
     api.patch<Task>(`/tasks/${id}`, { isDone }),
 
   deleteTask: (id: string) => api.delete(`/tasks/${id}`),
-  fetchTodayTasks: () => {
-    const today = new Date().toISOString().split("T")[0];
-    return tasksApi.fetchTasks({ deadline: today, isDone: false });
-  },
-
-  fetchAllCompleted: () => tasksApi.fetchTasks({ isDone: true }),
-
-  fetchProjectTasks: (projectId: string, showCompleted = false) =>
-    tasksApi.fetchTasks({
-      projectId,
-      ...(showCompleted ? {} : { isDone: false }),
-    }),
-
-  fetchInboxTasks: () => tasksApi.fetchTasks({ projectId: null }),
 };

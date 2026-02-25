@@ -23,7 +23,6 @@ export const UpdateUserInfoDesktop = ({
     onOpenChange: (open) => {
       if (!open) onClose();
     },
-    // elements: { reference: anchorRef.current },
     whileElementsMounted: autoUpdate,
     placement: "bottom",
     middleware: [offset(4), flip(), shift()],

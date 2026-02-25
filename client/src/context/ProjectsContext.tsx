@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useProjects } from "@/hooks/useProjects";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export type TaskMode =
   | "project"
@@ -24,18 +25,24 @@ const ProjectsContext = createContext<ProjectsContextType | null>(null);
 
 export function ProjectsProvider({ children }: { children: ReactNode }) {
   const projectsData = useProjects();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [mode, setMode] = useState<TaskMode>(() => {
-    const v = localStorage.getItem("mode") as TaskMode | null;
-    return v ?? "inbox";
-  });
+  const mode = useMemo(() => {
+    const path = location.pathname;
+    if (path.startsWith("/project/")) return "project";
+    if (path === "/today") return "today";
+    if (path === "/completed") return "completed";
+    if (path === "/overdue") return "overdue";
+    if (path === "/projects") return "projects";
+    return "inbox";
+  }, [location.pathname]);
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    () => {
-      const val = localStorage.getItem("selectedProjectId");
-      return val === "null" ? null : val;
-    },
-  );
+  const selectedProjectId = useMemo(() => {
+    const match = location.pathname.match(/\/project\/([^/]+)/);
+    return match ? match[1] : null;
+  }, [location.pathname]);
+
   const selectedProject =
     projectsData.projects.find((p) => p.id === selectedProjectId)?.title ||
     null;
@@ -43,13 +50,15 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem("showAll") === "true";
   });
   const changeMode = (newMode: TaskMode, projectId: string | null = null) => {
-    setMode(newMode);
-    setSelectedProjectId(projectId);
+    if (newMode === "project" && projectId) {
+      navigate(`/project/${projectId}`);
+    } else if (newMode === "inbox") {
+      navigate("/");
+    } else {
+      navigate(`/${newMode}`);
+    }
   };
-
-  useEffect(() => {
-    localStorage.setItem("selectedProjectId", selectedProjectId ?? "null");
-  }, [selectedProjectId]);
+  const setMode = (m: TaskMode) => changeMode(m);
 
   useEffect(() => {
     localStorage.setItem("showAll", String(showAll));

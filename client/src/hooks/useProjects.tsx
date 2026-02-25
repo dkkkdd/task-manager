@@ -6,7 +6,20 @@ export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    projectsApi.fetchProjects().then(setProjects).catch(console.error);
+    const controller = new AbortController();
+
+    const loadData = async () => {
+      try {
+        const projects = await projectsApi.fetchProjects(controller.signal);
+        setProjects(projects);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadData();
+
+    return () => controller.abort();
   }, []);
 
   const create = async (title: string, color: string, favorites: boolean) => {

@@ -1,25 +1,13 @@
 import { useEffect, useState } from "react";
+import type { FetchTasksParams } from "@/api/tasks";
 import type { Task } from "@/types/tasks";
 import { tasksApi } from "@/api/tasks";
 
 const sortTasks = (list: Task[]): Task[] => {
-  return (
-    [...list]
-      // .sort((a, b) => {
-      //   if (a.isDone && b.isDone) {
-      //     return (
-      //       new Date(b.completedAt!).getTime() -
-      //       new Date(a.completedAt!).getTime()
-      //     );
-      //   }
-      //   if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
-      //   return (a.order ?? 0) - (b.order ?? 0);
-      // })
-      .map((node) => ({
-        ...node,
-        subtasks: node.subtasks ? sortTasks(node.subtasks) : [],
-      }))
-  );
+  return [...list].map((node) => ({
+    ...node,
+    subtasks: node.subtasks ? sortTasks(node.subtasks) : [],
+  }));
 };
 
 const updateNode = (
@@ -57,20 +45,41 @@ const addSubtaskNode = (
   });
 };
 
-export function useTasks(userId: string) {
+export function useTasks(userId: string, filters: FetchTasksParams = {}) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
 
+    const controller = new AbortController();
     setLoading(true);
 
-    tasksApi.fetchTasks({ userId }).then((data) => {
-      setTasks(sortTasks(data));
-      setLoading(false);
-    });
-  }, [userId]);
+    async function loadTasks() {
+      try {
+        const data = await tasksApi.fetchTasks(
+          { userId, ...filters },
+          controller.signal,
+        );
+        setTasks(sortTasks(data));
+        console.log(data);
+        setLoading(false);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Помилка завантаження задач:", err);
+          setLoading(false);
+        }
+      }
+    }
+
+    loadTasks();
+
+    return () => controller.abort();
+  }, [userId, JSON.stringify(filters)]);
 
   const create = async (data: Partial<Task> & { parentId?: string | null }) => {
     const tempId = `temp-${Date.now()}`;

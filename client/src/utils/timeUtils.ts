@@ -1,4 +1,4 @@
-export const generateTimeOptions = (step: number = 30) => {
+export const generateTimeOptions = (step: number) => {
   const options = Array.from({ length: (24 * 60) / step }, (_, i) => {
     const totalMinutes = i * step;
     const h = Math.floor(totalMinutes / 60)
