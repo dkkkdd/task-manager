@@ -4,21 +4,10 @@ import {
   UpdateProjectSchema,
   CreateProjectSchema,
 } from "../schemas/project.schema";
+import { RequestHandler } from "express";
 
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-}
-
-function requireUser(req: AuthenticatedRequest, res: Response): string | null {
-  if (!req.userId) {
-    res.status(401).json({ error: "Unauthorized" });
-    return null;
-  }
-  return req.userId;
-}
-
-export async function getProjects(req: AuthenticatedRequest, res: Response) {
-  const userId = requireUser(req, res);
+export const getProjects: RequestHandler = async (req, res) => {
+  const userId = req.userId;
   if (!userId) return;
 
   const projects = await prisma.project.findMany({
@@ -31,10 +20,10 @@ export async function getProjects(req: AuthenticatedRequest, res: Response) {
   });
 
   res.json(projects);
-}
+};
 
-export async function createProject(req: AuthenticatedRequest, res: Response) {
-  const userId = requireUser(req, res);
+export const createProject: RequestHandler = async (req, res) => {
+  const userId = req.userId;
   if (!userId) return;
 
   const validation = CreateProjectSchema.safeParse(req.body);
@@ -54,10 +43,10 @@ export async function createProject(req: AuthenticatedRequest, res: Response) {
   });
 
   res.status(201).json(project);
-}
+};
 
-export async function updateProject(req: AuthenticatedRequest, res: Response) {
-  const userId = requireUser(req, res);
+export const updateProject: RequestHandler = async (req, res) => {
+  const userId = req.userId;
   if (!userId) return;
 
   const { id } = req.params;
@@ -91,10 +80,9 @@ export async function updateProject(req: AuthenticatedRequest, res: Response) {
       .status(404)
       .json({ error: "Project not found or access denied" });
   }
-}
-
-export async function deleteProject(req: AuthenticatedRequest, res: Response) {
-  const userId = requireUser(req, res);
+};
+export const deleteProject: RequestHandler = async (req, res) => {
+  const userId = req.userId;
   if (!userId) return;
 
   const { id } = req.params;
@@ -114,4 +102,4 @@ export async function deleteProject(req: AuthenticatedRequest, res: Response) {
   } catch (error) {
     return res.status(500).json({ error: "server_error" });
   }
-}
+};

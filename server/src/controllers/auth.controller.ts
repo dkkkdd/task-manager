@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
+import { RequestHandler } from "express";
+
 import {
   UpdateUserSchema,
   CreateUserSchema,
@@ -18,9 +20,6 @@ function setAuthCookie(res: Response, token: string) {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/",
   });
-}
-interface AuthenticatedRequest extends Request {
-  userId?: string;
 }
 
 export async function register(req: Request, res: Response) {
@@ -70,7 +69,7 @@ export async function register(req: Request, res: Response) {
   }
 }
 
-export async function getMe(req: AuthenticatedRequest, res: Response) {
+export const getMe: RequestHandler = async (req, res) => {
   const userId = req.userId;
 
   try {
@@ -98,9 +97,9 @@ export async function getMe(req: AuthenticatedRequest, res: Response) {
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
-export async function updateMe(req: AuthenticatedRequest, res: Response) {
+export const updateMe: RequestHandler = async (req, res) => {
   const userId = req.userId;
   const validation = UpdateUserSchema.safeParse(req.body);
   if (!validation.success) {
@@ -131,9 +130,9 @@ export async function updateMe(req: AuthenticatedRequest, res: Response) {
     }
     res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
-export async function login(req: Request, res: Response) {
+export const login: RequestHandler = async (req, res) => {
   const validation = LoginUserSchema.safeParse(req.body);
   if (!validation.success) {
     return res.status(400).json({ error: validation.error.format() });
@@ -179,9 +178,9 @@ export async function login(req: Request, res: Response) {
     console.error("Login Error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
-export async function deleteAcc(req: AuthenticatedRequest, res: Response) {
+export const deleteAcc: RequestHandler = async (req, res) => {
   const userId = req.userId;
 
   try {
@@ -194,7 +193,7 @@ export async function deleteAcc(req: AuthenticatedRequest, res: Response) {
     console.error("Delete Acc Error:", error);
     res.status(500).json({ error: "Failed to delete account" });
   }
-}
+};
 
 export async function logout(req: Request, res: Response) {
   res.clearCookie("accessToken", {

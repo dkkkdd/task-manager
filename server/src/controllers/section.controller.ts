@@ -4,17 +4,14 @@ import {
   UpdateSectionSchema,
   CreateSectionSchema,
 } from "../schemas/section.schema";
-
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-}
+import { RequestHandler } from "express";
 
 function normalizeId(id: string | string[] | undefined): string | undefined {
   if (!id) return undefined;
   return Array.isArray(id) ? id[0] : id;
 }
 
-export async function createSection(req: AuthenticatedRequest, res: Response) {
+export const createSection: RequestHandler = async (req, res) => {
   try {
     const validation = CreateSectionSchema.safeParse(req.body);
     if (!validation.success) {
@@ -50,9 +47,9 @@ export async function createSection(req: AuthenticatedRequest, res: Response) {
     console.error("CREATE SECTION ERROR:", errorMessage);
     res.status(500).json({ error: errorMessage });
   }
-}
+};
 
-export async function updateSection(req: AuthenticatedRequest, res: Response) {
+export const updateSection: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
     const id = normalizeId(req.params.id);
@@ -84,9 +81,9 @@ export async function updateSection(req: AuthenticatedRequest, res: Response) {
     console.error("UPDATE SECTION ERROR:", error);
     res.status(500).json({ error: "Failed to update section" });
   }
-}
+};
 
-export async function deleteSection(req: AuthenticatedRequest, res: Response) {
+export const deleteSection: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
     const id = normalizeId(req.params.id);
@@ -109,4 +106,4 @@ export async function deleteSection(req: AuthenticatedRequest, res: Response) {
     console.error("DELETE SECTION ERROR:", error);
     res.status(500).json({ error: "Failed to delete section" });
   }
-}
+};

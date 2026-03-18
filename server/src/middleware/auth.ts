@@ -1,20 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
+import { RequestHandler } from "express";
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not defined");
 }
 
-interface AuthenticatedRequest extends Request {
-  userId?: string;
-}
-
-export const authMiddleware = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction,
-) => {
+export const authMiddleware: RequestHandler = (req, res, next) => {
   const token = req.cookies.accessToken;
 
   if (!token) return res.status(401).json({ error: "No token provided" });
