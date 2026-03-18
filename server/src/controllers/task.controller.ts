@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
 import { UpdateTaskSchema, CreateTaskSchema } from "../schemas/task.schema";
+import { Prisma } from "@prisma/client";
 
 interface AuthenticatedRequest extends Request {
-  userId?: string;
+  userId: string;
 }
 
 function normalizeId(id: string | string[] | undefined): string | undefined {
@@ -14,50 +15,42 @@ function normalizeId(id: string | string[] | undefined): string | undefined {
 export async function getTasks(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const { projectId, isDone, deadline, deadlineBefore } = req.query;
+    const projectId = normalizeId(req.query.projectId as string | string[]);
+    const mode = normalizeId(req.query.mode as string | string[]);
 
-    const where: any = {
-      userId,
-      parentId: null,
-    };
+    const where: Prisma.TaskWhereInput = { userId, parentId: null };
 
-    if (projectId === "null") {
-      where.projectId = null;
-    } else if (projectId) {
-      where.projectId = projectId;
+    switch (mode) {
+      case "inbox":
+        where.projectId = null;
+        break;
+      case "project":
+        if (!projectId)
+          return res.status(400).json({ error: "projectId required" });
+        where.projectId = projectId;
+        break;
+      case "today":
+        where.deadline = {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          lte: new Date(new Date().setHours(23, 59, 59, 999)),
+        };
+        break;
+      case "overdue":
+        where.deadline = { lt: new Date() };
+        where.isDone = false;
+        break;
+      case "completed":
+        where.isDone = true;
+        break;
+      case "projects":
+        return res.json([]);
+      default:
+        where.projectId = null;
     }
-
-    if (isDone !== undefined) {
-      where.isDone = isDone === "true";
-    }
-
-    if (deadline) {
-      const day = new Date(deadline as string);
-      const start = new Date(day.setHours(0, 0, 0, 0));
-      const end = new Date(day.setHours(23, 59, 59, 999));
-
-      where.deadline = {
-        gte: start,
-        lte: end,
-      };
-    }
-
-    if (deadlineBefore) {
-      where.deadline = {
-        lt: new Date(deadlineBefore as string),
-      };
-      where.isDone = false;
-    }
-
     const tasks = await prisma.task.findMany({
       where,
-      include: {
-        subtasks: {
-          orderBy: { order: "asc" },
-        },
-      },
+      include: { subtasks: { orderBy: { order: "asc" } } },
       orderBy: [{ isDone: "asc" }, { order: "asc" }],
     });
 
@@ -71,7 +64,6 @@ export async function getTasks(req: AuthenticatedRequest, res: Response) {
 export async function createTask(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const validation = CreateTaskSchema.safeParse(req.body);
     if (!validation.success) {
@@ -128,7 +120,6 @@ export async function createTask(req: AuthenticatedRequest, res: Response) {
 export async function updateTask(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const taskId = normalizeId(req.params.id);
     if (!taskId) return res.status(400).json({ error: "Task id required" });
@@ -174,7 +165,6 @@ export async function updateTask(req: AuthenticatedRequest, res: Response) {
 export async function deleteTask(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const taskId = normalizeId(req.params.id);
     if (!taskId) return res.status(400).json({ error: "Task id required" });
