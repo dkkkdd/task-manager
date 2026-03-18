@@ -2,26 +2,21 @@ import { Request, Response } from "express";
 import { prisma } from "../prisma";
 import { UpdateTaskSchema, CreateTaskSchema } from "../schemas/task.schema";
 import { Prisma } from "@prisma/client";
-
-interface AuthenticatedRequest extends Request {
-  userId: string;
-}
+import { RequestHandler } from "express";
 
 function normalizeId(id: string | string[] | undefined): string | undefined {
   if (!id) return undefined;
   return Array.isArray(id) ? id[0] : id;
 }
 
-export async function getTasks(req: AuthenticatedRequest, res: Response) {
+export const getTasks: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
     console.log("QUERY PARAMS:", req.query);
 
     const projectId = normalizeId(req.query.projectId as string | string[]);
     const mode = normalizeId(req.query.mode as string | string[]);
-    console.log(
-      `[DEBUG] Fetching tasks: userId=${userId}, mode=${mode}, projectId=${projectId}`,
-    );
+
     const where: Prisma.TaskWhereInput = { userId, parentId: null };
 
     switch (mode) {
@@ -29,8 +24,10 @@ export async function getTasks(req: AuthenticatedRequest, res: Response) {
         where.projectId = null;
         break;
       case "project":
-        if (!projectId)
-          return res.status(400).json({ error: "projectId required" });
+        if (!projectId) {
+          res.status(400).json({ error: "projectId required" });
+          return;
+        }
         where.projectId = projectId;
         break;
       case "today":
@@ -47,7 +44,8 @@ export async function getTasks(req: AuthenticatedRequest, res: Response) {
         where.isDone = true;
         break;
       case "projects":
-        return res.json([]);
+        res.json([]);
+        return;
       default:
         where.projectId = null;
     }
@@ -62,15 +60,16 @@ export async function getTasks(req: AuthenticatedRequest, res: Response) {
     console.error("GET TASKS ERROR:", error);
     res.status(500).json({ error: "Failed to fetch tasks" });
   }
-}
+};
 
-export async function createTask(req: AuthenticatedRequest, res: Response) {
+export const createTask: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
 
     const validation = CreateTaskSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: validation.error.format() });
+      res.status(400).json({ error: validation.error.format() });
+      return;
     }
     const {
       title,
@@ -118,18 +117,22 @@ export async function createTask(req: AuthenticatedRequest, res: Response) {
     console.error("CREATE TASK ERROR:", error);
     res.status(500).json({ error: "Failed to create task" });
   }
-}
+};
 
-export async function updateTask(req: AuthenticatedRequest, res: Response) {
+export const updateTask: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
 
     const taskId = normalizeId(req.params.id);
-    if (!taskId) return res.status(400).json({ error: "Task id required" });
+    if (!taskId) {
+      res.status(400).json({ error: "Task id required" });
+      return;
+    }
 
     const validation = UpdateTaskSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: validation.error.format() });
+      res.status(400).json({ error: validation.error.format() });
+      return;
     }
     const data = validation.data;
     if (data.deadline) {
@@ -163,14 +166,17 @@ export async function updateTask(req: AuthenticatedRequest, res: Response) {
     console.error("UPDATE TASK ERROR:", error);
     res.status(404).json({ error: "Task not found" });
   }
-}
+};
 
-export async function deleteTask(req: AuthenticatedRequest, res: Response) {
+export const deleteTask: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
 
     const taskId = normalizeId(req.params.id);
-    if (!taskId) return res.status(400).json({ error: "Task id required" });
+    if (!taskId) {
+      res.status(400).json({ error: "Task id required" });
+      return;
+    }
 
     await prisma.task.deleteMany({
       where: {
@@ -184,22 +190,29 @@ export async function deleteTask(req: AuthenticatedRequest, res: Response) {
     console.error("DELETE TASK ERROR:", error);
     res.status(404).json({ error: "Task not found" });
   }
-}
+};
 
-export async function moveTask(req: AuthenticatedRequest, res: Response) {
+export const moveTask: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
     const taskId = normalizeId(req.params.id);
-    if (!taskId) return res.status(400).json({ error: "Task id required" });
+    if (!taskId) {
+      res.status(400).json({ error: "Task id required" });
+      return;
+    }
 
     const { toSectionId, toParentId, beforeOrder, afterOrder } = req.body;
 
     if (beforeOrder == null || afterOrder == null) {
-      return res.status(400).json({
+      res.status(400).json({
         error: "beforeOrder and afterOrder are required",
       });
+      return;
     }
 
     const newOrder = (Number(beforeOrder) + Number(afterOrder)) / 2;
@@ -221,4 +234,4 @@ export async function moveTask(req: AuthenticatedRequest, res: Response) {
     console.error("MOVE TASK ERROR:", error);
     res.status(500).json({ error: "Failed to move task" });
   }
-}
+};
