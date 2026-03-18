@@ -65,7 +65,7 @@ export const getTasks: RequestHandler = async (req, res) => {
 export const createTask: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
-
+    console.log("CREATE TASK START: userId =", req.userId, "body =", req.body);
     const validation = CreateTaskSchema.safeParse(req.body);
     if (!validation.success) {
       res.status(400).json({ error: validation.error.format() });
