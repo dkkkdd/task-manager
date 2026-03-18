@@ -15,10 +15,13 @@ function normalizeId(id: string | string[] | undefined): string | undefined {
 export async function getTasks(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.userId;
+    console.log("QUERY PARAMS:", req.query);
 
     const projectId = normalizeId(req.query.projectId as string | string[]);
     const mode = normalizeId(req.query.mode as string | string[]);
-
+    console.log(
+      `[DEBUG] Fetching tasks: userId=${userId}, mode=${mode}, projectId=${projectId}`,
+    );
     const where: Prisma.TaskWhereInput = { userId, parentId: null };
 
     switch (mode) {
