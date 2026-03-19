@@ -5,27 +5,21 @@ import type { Task } from "@/types/tasks";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
 import { MobileDrawer } from "@/features/MobileDrawer";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useProjectsContext } from "@/context/ProjectsContext";
 import { Select } from "@/components/Select";
 import { Calendar } from "@/components/Calendar/Calendar";
-import { useTasksActions } from "@/context/TasksContext";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { TaskCard } from "@/components/Tasks/TaskCard";
+import { lazy, Suspense } from "react";
+const TaskCard = lazy(() => import("@/components/Tasks/TaskCard"));
+import { TaskCardLoader } from "./TaskCardLoader";
+import { useModeStore } from "@/stores/useModesStore";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useTasksStore } from "@/stores/useTasksStore";
 
 export interface TaskFormProps {
   formMode: "create" | "edit";
   initiaTask?: Task;
   parentId?: string | null;
   openForm: boolean;
-  onSubmit: (data: {
-    title: string;
-    projectId: string | null;
-    deadline?: Date | null;
-    reminderAt?: string | null;
-    comment?: string | null;
-    priority?: number;
-    parentId?: string | null;
-  }) => void | Promise<void>;
   onClose: () => void;
   onStartAddSubtask?: (parentId: string | null) => void;
 }
@@ -35,26 +29,71 @@ export const TaskForm = ({
   initiaTask,
   openForm,
   parentId = null,
-  onSubmit,
   onStartAddSubtask,
   onClose,
 }: TaskFormProps) => {
   // if (!openForm) return null;
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const { mode } = useProjectsContext();
+  const mode = useModeStore((t) => t.mode);
+  const selectedProjectId = useModeStore((t) => t.selectedProjectId);
+  const projects = useProjectsStore((t) => t.projects);
 
-  const { selectedProjectId, projects } = useProjectsContext();
   const [name, setName] = useState(initiaTask?.title ?? "");
   const [date, setDate] = useState(initiaTask?.deadline ?? null);
   const [time, setTime] = useState(initiaTask?.reminderAt ?? null);
   const [comment, setComment] = useState(initiaTask?.comment ?? "");
-  const { deleteTask } = useTasksActions();
+  const deleteTask = useTasksStore((s) => s.deleteTask);
   const [openComfirm, setOpenConfirm] = useState(false);
   const [priority, setPriority] = useState(initiaTask?.priority ?? 1);
   const [projectId, setProjectId] = useState(selectedProjectId);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createTask = useTasksStore((s) => s.createTask);
+  const updateTask = useTasksStore((s) => s.updateTask);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const finalDeadline = date;
+
+      if (formMode === "edit" && initiaTask?.id) {
+        // ← редактирование
+        await updateTask(initiaTask.id, {
+          title: name,
+          projectId,
+          priority,
+          deadline: finalDeadline,
+          reminderAt: time,
+          comment,
+        });
+        onClose();
+      } else {
+        // ← создание
+        await createTask({
+          title: name,
+          projectId,
+          priority,
+          deadline: finalDeadline,
+          reminderAt: time,
+          comment,
+          parentId: initiaTask?.parentId || parentId,
+        });
+
+        setName("");
+        setComment("");
+        setPriority(1);
+        setTime(null);
+        setDate(mode === "today" ? new Date() : null);
+      }
+    } catch (error) {
+      console.error("Failed to submit task:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const containerRef = useRef<HTMLFormElement>(null);
   const initialSelectedId = useRef(selectedProjectId);
 
@@ -70,42 +109,42 @@ export const TaskForm = ({
     }
   }, [mode, formMode]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || isSubmitting) return;
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!name.trim() || isSubmitting) return;
 
-    try {
-      setIsSubmitting(true);
-      const finalDeadline = date;
+  //   try {
+  //     setIsSubmitting(true);
+  //     const finalDeadline = date;
 
-      await onSubmit({
-        title: name,
-        projectId,
-        priority,
-        deadline: finalDeadline,
-        reminderAt: time,
-        comment: comment,
-        parentId: initiaTask?.parentId || parentId,
-      });
+  //     await createTask({
+  //       title: name,
+  //       projectId,
+  //       priority,
+  //       deadline: finalDeadline,
+  //       reminderAt: time,
+  //       comment: comment,
+  //       parentId: initiaTask?.parentId || parentId,
+  //     });
 
-      if (formMode !== "edit") {
-        setName("");
-        setComment("");
-        setPriority(1);
-        setTime(null);
+  //     if (formMode !== "edit") {
+  //       setName("");
+  //       setComment("");
+  //       setPriority(1);
+  //       setTime(null);
 
-        if (mode === "today") {
-          setDate(new Date());
-        } else {
-          setDate(null);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to submit task:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //       if (mode === "today") {
+  //         setDate(new Date());
+  //       } else {
+  //         setDate(null);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to submit task:", error);
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const isSubTask = Boolean(initiaTask?.parentId || parentId);
 
@@ -287,13 +326,15 @@ export const TaskForm = ({
             ${index !== 0 ? "" : ""}
           `}
                           >
-                            <TaskCard
-                              task={sub}
-                              isMobile={isMobile}
-                              isEditing={false}
-                              onEdit={() => {}}
-                              onDeleteRequest={() => {}}
-                            />
+                            <Suspense fallback={<TaskCardLoader />}>
+                              <TaskCard
+                                task={sub}
+                                isMobile={isMobile}
+                                isEditing={false}
+                                // onEdit={() => {}}
+                                onDeleteRequest={() => {}}
+                              />
+                            </Suspense>
                           </li>
                         ))}
                       </ul>

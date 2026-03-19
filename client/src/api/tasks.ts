@@ -3,11 +3,11 @@ import type { Task } from "@/types/tasks";
 
 export type FetchTasksParams = {
   projectId?: string | null;
-  sectionId?: string | null;
-  parentId?: string | null;
-  isDone?: boolean;
-  deadline?: string;
-  userId?: string;
+  // sectionId?: string | null;
+  // parentId?: string | null;
+  // isDone?: boolean;
+  // deadline?: string;
+  mode: string;
 };
 
 export const tasksApi = {
@@ -16,8 +16,8 @@ export const tasksApi = {
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          query.append(key, value === null ? "null" : String(value));
+        if (value !== undefined && value !== null) {
+          query.append(key, String(value));
         }
       });
     }

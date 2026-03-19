@@ -2,7 +2,6 @@ export interface Task {
   id: string;
   title: string;
   isDone: boolean;
-  order: number;
   priority: number;
 
   parentId?: string | null;

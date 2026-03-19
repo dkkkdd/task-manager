@@ -1,11 +1,12 @@
 import { useState, useRef, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useProjectsContext } from "@/context/ProjectsContext";
+
 import { ProjectsList } from "@/components/Projects/ProjectsList";
+import { useProjectsStore } from "@/stores/useProjectsStore";
 
 export const FavoriteProjects = () => {
   const { t } = useTranslation();
-  const { projects } = useProjectsContext();
+  const projects = useProjectsStore((s) => s.projects);
   const [showProjects, setShowProjects] = useState(true);
   const wrapperRef = useRef<HTMLDivElement>(null);
 

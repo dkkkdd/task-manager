@@ -4,18 +4,24 @@ import type { Task } from "@/types/tasks";
 import { ModalPortal } from "@/features/ModalPortal";
 import { formatDateLabel, dateColor } from "@/utils/dateFormatters";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
-import { useTasksActions } from "@/context/TasksContext";
 import { GlobalDropdown } from "@/components/Tasks/TaskMenu";
-import { useProjectsContext } from "@/context/ProjectsContext";
+
 import { TaskInfo } from "@/components/Tasks/TaskInfo";
 import { TaskCheckbox } from "@/components/Tasks/TaskCheckbox";
 import { TaskMetadata } from "@/components/Tasks/Taskmetadata";
 import { TaskActions } from "@/components/Tasks/Taskactions";
 import { SubtaskToggle } from "@/components/Tasks/Subtasktoggle";
+import { useModeStore } from "@/stores/useModesStore";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useTaskListLogic } from "@/hooks/useTaskList";
+import { TaskForm } from "./TaskForm";
+import { useTasksStore } from "@/stores/useTasksStore";
+import { RenderTaskItem } from "./RenderTaskCard";
+import { useTaskListStore } from "@/stores/useTaskListStore";
 
 interface TaskCardProps {
   task: Task;
-  onEdit: () => void;
+  // onEdit: () => void;
   isEditing: boolean;
   onDeleteRequest: () => void;
   onAddSubtask?: () => void;
@@ -27,12 +33,12 @@ interface TaskCardProps {
   showSubTasks?: boolean;
 }
 
-export const TaskCard = memo(
+const TaskCard = memo(
   ({
     task,
-    onEdit,
+    // onEdit,
     isEditing,
-    isMobile,
+    isMobile = false,
     onDeleteRequest,
     onAddSubtask,
     selected,
@@ -41,15 +47,22 @@ export const TaskCard = memo(
     setShowSubTasks,
     showSubTasks,
   }: TaskCardProps) => {
-    const { updateDone, updateTask } = useTasksActions();
-    const { mode, projects, changeMode } = useProjectsContext();
-
+    const updateTask = useTasksStore((s) => s.updateTask);
+    const updateDone = useTasksStore((s) => s.updateDone);
+    // const { mode, projects, changeMode } = useProjectsContext();
+    const mode = useModeStore((s) => s.mode);
+    const setMode = useModeStore((s) => s.setMode);
+    const projects = useProjectsStore((s) => s.projects);
+    console.log("task card render");
     const [openTaskInfo, setOpenTaskInfo] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isCalOpen, setIsCalOpen] = useState(false);
+    const activeParentId = useTaskListStore((s) => s.activeParentId);
+    const setActiveParentId = useTaskListStore((s) => s.setActiveParentId);
 
+    const expandedTasks = useTaskListStore((s) => s.expandedTasks);
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
+    const { state, actions } = useTaskListLogic();
     const handleToggle = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -81,7 +94,7 @@ export const TaskCard = memo(
       }
 
       if (isMobile) {
-        onEdit();
+        actions.handleStartEditing(task.id);
         return;
       }
 
@@ -115,9 +128,12 @@ export const TaskCard = memo(
 
     const handleProjectChange = useCallback(
       (prodId: string | null) => {
-        changeMode(prodId === null ? "inbox" : "project", prodId);
+        setMode(
+          prodId === null ? "inbox" : "project",
+          prodId === null ? undefined : prodId,
+        );
       },
-      [changeMode],
+      [setMode],
     );
 
     const priorityStyle = useMemo(() => {
@@ -137,6 +153,17 @@ export const TaskCard = memo(
     }, [task.subtasks]);
 
     if (isEditing) return null;
+    if (!isMobile && state.editingTaskId === task.id) {
+      return (
+        <TaskForm
+          key={task.id}
+          openForm
+          initiaTask={task}
+          formMode="edit"
+          onClose={() => actions.setEditingTaskId(null)}
+        />
+      );
+    }
 
     return (
       <>
@@ -213,7 +240,7 @@ export const TaskCard = memo(
                 isCalOpen={isCalOpen}
                 currentDeadlineStr={currentDeadlineStr}
                 reminderAt={task.reminderAt}
-                onEdit={onEdit}
+                onEdit={() => actions.handleStartEditing(task.id)}
                 onMenuClick={handleMenuClick}
                 onDateUpdate={handleDate}
                 onTimeUpdate={handleTime}
@@ -245,7 +272,7 @@ export const TaskCard = memo(
             anchorEl={anchorEl}
             onClose={() => setIsMenuOpen(false)}
             onEdit={() => {
-              onEdit();
+              actions.handleStartEditing(task.id);
               setIsMenuOpen(false);
             }}
             onDelete={() => {
@@ -255,9 +282,27 @@ export const TaskCard = memo(
             onAddSubtask={onAddSubtask}
           />
         )}
+        {mode !== "today" && expandedTasks[task.id] !== false && (
+          <div
+            key={`subtasks-container-${task.id}`}
+            className="subtasks-container pl-9 flex flex-col"
+          >
+            {task.subtasks?.map((sub: Task) => (
+              <RenderTaskItem key={sub.id} task={sub} />
+            ))}
+
+            <TaskForm
+              openForm={activeParentId === task.id}
+              formMode="create"
+              parentId={task.id}
+              onClose={() => setActiveParentId(null)}
+            />
+          </div>
+        )}
       </>
     );
   },
 );
 
 TaskCard.displayName = "TaskCard";
+export default TaskCard;

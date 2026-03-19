@@ -7,13 +7,14 @@ import type { Task } from "@/types/tasks";
 import { ModalPortal } from "@/features/ModalPortal";
 import { applyTheme } from "@/utils/userSettings";
 import { useAuthState, useAuthActions } from "@/context/AuthProvider";
-import { useProjectsContext } from "@/context/ProjectsContext";
-import { useTasksState } from "@/context/TasksContext";
+
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { UpdateUserInfo } from "@/components/User/UpdateUserInfo/UpdateUserInfo";
 import { UserInfoMobile } from "@/components/User/UserInfo/UserInfoMobile";
 import { UserInfoDesktop } from "@/components/User/UserInfo/UserInfoDesktop";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useTasksStore } from "@/stores/useTasksStore";
 
 export const UserInfo = ({
   onClose,
@@ -26,8 +27,8 @@ export const UserInfo = ({
   const { t, i18n: i18nInstance } = useTranslation();
   const { logoutUser, deleteUser } = useAuthActions();
   const { user } = useAuthState();
-  const { projects } = useProjectsContext();
-  const { tasks } = useTasksState();
+  const projects = useProjectsStore((t) => t.projects);
+  const tasks = useTasksStore((s) => s.tasks);
 
   const anchorRef = useRef<HTMLButtonElement>(null);
 

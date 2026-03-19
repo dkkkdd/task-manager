@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ModalPortal } from "@/features/ModalPortal";
 import { ProjectsList } from "@/components/Projects/ProjectsList";
-import { ProjectForm } from "@/components/Projects/ProjectForm";
-import { useProjectsContext } from "@/context/ProjectsContext";
+
+import ShowProjectForm from "./ShowProjectForm";
+import { useProjectsStore } from "@/stores/useProjectsStore";
 
 export function ProjectsSection() {
   const { t } = useTranslation();
-  const { projects, createProject, changeMode } = useProjectsContext();
+  const projects = useProjectsStore((s) => s.projects);
+
   const [showProjects, setShowProjects] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,12 +38,7 @@ export function ProjectsSection() {
             ></span>
           </div>
 
-          <div
-            className="w-7 h-7 flex items-center justify-center rounded-md cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-[#82828241] group"
-            onClick={() => setShowForm(true)}
-          >
-            <span className="icon-icons8-close text-lg rotate-45 text-gray-400 group-hover:text-black/70 dark:group-hover:text-white"></span>
-          </div>
+          <ShowProjectForm />
         </div>
       </div>
 
@@ -53,21 +48,6 @@ export function ProjectsSection() {
       >
         <ProjectsList projects={projects} />
       </div>
-
-      <ModalPortal>
-        <ProjectForm
-          mode="create"
-          open={showForm}
-          onClose={() => setShowForm(false)}
-          onSubmit={async ({ title, color }) => {
-            const newProject = await createProject(title, color, false);
-            if (newProject) {
-              changeMode("project", newProject.id);
-            }
-            setShowForm(false);
-          }}
-        />
-      </ModalPortal>
     </div>
   );
 }

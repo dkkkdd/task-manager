@@ -1,16 +1,36 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { MobileMenu, Sidebar } from "@/components/Sidebar/Sidebar";
-import { useProjectsContext } from "@/context/ProjectsContext";
+import { Sidebar } from "@/components/Sidebar/Desktop/Sidebar";
+import { MobileMenu } from "./Sidebar/Mobile/Sidebar";
+import { useModeStore } from "@/stores/useModesStore";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+
+function AppHeader() {
+  const { t } = useTranslation();
+  const mode = useModeStore((s) => s.mode);
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
+  const projects = useProjectsStore((s) => s.projects);
+  const projectTitle = projects.find((p) => p.id === selectedProjectId)?.title;
+
+  return (
+    <div className="w-full top-0 p-4 bg-gradient-to-b from-white/90 to-white/0 dark:from-[#1f1f1f]/90 dark:to-[#1f1f1f]/0 absolute">
+      <div className="p-3 font-bold">
+        {projectTitle?.toUpperCase() || t(mode.toLowerCase()).toUpperCase()}
+      </div>
+    </div>
+  );
+}
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
+const MemoChildren = memo(({ children }: { children: React.ReactNode }) => (
+  <>{children}</>
+));
+
 export function AppLayout({ children }: AppLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const { t } = useTranslation();
-  const { mode, selectedProject } = useProjectsContext();
 
   return (
     <div className="flex w-full bg-white dark:bg-[#1f1f1f] transition-colors duration-300 overflow-hidden">
@@ -31,16 +51,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       <Sidebar collapsed={collapsed} />
+
       <MobileMenu />
       <main className="flex-1 h-[100dvh] overflow-y-auto overflow-x-hidden p-4 !pt-0 sm:p-[24px] bg-white dark:bg-[#1f1f1f] text-black dark:text-white pb-15">
-        {children}
+        <MemoChildren>{children}</MemoChildren>
 
-        <div className="w-full top-0 p-4 bg-gradient-to-b from-white/90 to-white/0 dark:from-[#1f1f1f]/90 dark:to-[#1f1f1f]/0 absolute">
-          <div className="p-3 font-bold">
-            {selectedProject?.toUpperCase() ||
-              t(mode.toLowerCase()).toUpperCase()}
-          </div>
-        </div>
+        <AppHeader />
       </main>
     </div>
   );

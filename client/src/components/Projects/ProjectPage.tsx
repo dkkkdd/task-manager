@@ -21,7 +21,12 @@ export const ProjectPage = () => {
       )}
 
       <div className="py-5">
-        <UserBtn onClick={() => setShowUserInfo(true)} />
+        <UserBtn
+          onClick={() => {
+            setShowUserInfo(true);
+            (document.activeElement as HTMLElement)?.blur();
+          }}
+        />
         {isMobile && (
           <UserInfo
             onClose={() => setShowUserInfo(false)}

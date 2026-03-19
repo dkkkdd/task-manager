@@ -1,3 +1,5 @@
+import { useModeStore } from "@/stores/useModesStore";
+import { useTaskListStore } from "@/stores/useTaskListStore";
 import { useTranslation } from "react-i18next";
 
 const EMPTY_STATES_CONFIG = {
@@ -28,14 +30,12 @@ const EMPTY_STATES_CONFIG = {
   },
 } as const;
 
-export const EmptyState = ({
-  mode,
-  onOpenForm,
-}: {
-  mode: string;
-  onOpenForm: () => void;
-}) => {
+export const EmptyState = () => {
   const { t } = useTranslation();
+  const mode = useModeStore((s) => s.mode);
+  const openForm = useTaskListStore((s) => s.openForm);
+  const setOpenForm = useTaskListStore((s) => s.setOpenForm);
+  if (!openForm) return;
 
   const config =
     EMPTY_STATES_CONFIG[mode as keyof typeof EMPTY_STATES_CONFIG] ||
@@ -59,7 +59,7 @@ export const EmptyState = ({
 
       {mode !== "completed" && mode !== "overdue" && (
         <button
-          onClick={onOpenForm}
+          onClick={() => setOpenForm(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-full border border-black/10 dark:border-white/5 mt-3 
                    hover:border-[#9d174d]/50 hover:bg-[#9d174d]/5 transition-all duration-200
                    text-[13px] text-black/40 dark:text-white/40 hover:text-[#9d174d] cursor-pointer"

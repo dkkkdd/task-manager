@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { Project } from "@/types/project";
 import { useTranslation } from "react-i18next";
-import { useProjectsContext } from "@/context/ProjectsContext";
 import { ModalPortal } from "@/features/ModalPortal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { ProjectForm } from "@/components/Projects/ProjectForm";
 import { ProjectMenu } from "@/components/Projects/Menu/ProjectMenu";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useNavigate } from "react-router-dom";
 
 type MenuState = {
   anchor: HTMLElement | null;
@@ -31,8 +32,11 @@ export function ProjectMenuController({
   setMenu: React.Dispatch<React.SetStateAction<MenuState>>;
   closeMenu: () => void;
 }) {
-  const { projects, toggleFavorite, deleteProject, updateProject } =
-    useProjectsContext();
+  const navigate = useNavigate();
+  const projects = useProjectsStore((s) => s.projects);
+  const toggleFavorite = useProjectsStore((s) => s.toggleFavorite);
+  const deleteProject = useProjectsStore((s) => s.deleteProject);
+  const updateProject = useProjectsStore((s) => s.updateProject);
 
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -76,6 +80,7 @@ export function ProjectMenuController({
             message={t("delete_project_confirm", { title: project.title })}
             onConfirm={() => {
               deleteProject(project.id);
+              navigate("/");
               setConfirmDelete(false);
               onClose();
             }}

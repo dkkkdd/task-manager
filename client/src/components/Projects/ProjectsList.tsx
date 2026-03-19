@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { Project } from "@/types/project";
 import { ProjectItem } from "@/components/Projects/ProjectCard";
 import { ProjectMenuController } from "@/components/Projects/Menu/ProjectMenuController";
@@ -9,9 +9,9 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
     projectId: string | null;
   }>({ anchor: null, projectId: null });
 
-  const openMenu = (el: HTMLElement, projectId: string) => {
+  const openMenu = useCallback((el: HTMLElement, projectId: string) => {
     setMenu({ anchor: el, projectId });
-  };
+  }, []);
 
   return (
     <>
@@ -20,7 +20,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
           <ProjectItem
             key={p.id}
             project={p}
-            onOpenMenu={(el) => openMenu(el, p.id)}
+            onOpenMenu={openMenu}
             isMenuOpen={menu.projectId === p.id && !!menu.anchor}
           />
         ))}

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
-import { useProjectsContext } from "@/context/ProjectsContext";
-import { useTasksActions } from "@/context/TasksContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Select } from "@/components/Select";
 import { Calendar } from "@/components/Calendar/Calendar";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useModeStore } from "@/stores/useModesStore";
+import { useTasksStore } from "@/stores/useTasksStore";
 
 type SelectorProps = {
   visible: boolean;
@@ -33,8 +34,9 @@ export const Selector = ({
 }: SelectorProps) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const { selectedProjectId, projects } = useProjectsContext();
-  const { updateTask } = useTasksActions();
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
+  const projects = useProjectsStore((s) => s.projects);
+  const updateTask = useTasksStore((s) => s.updateTask);
   const [bulkProjectId, setBulkProjectId] = useState<string | null>(
     selectedProjectId,
   );

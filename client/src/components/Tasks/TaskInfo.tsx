@@ -3,9 +3,8 @@ import type { Task } from "@/types/tasks";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { enUS, uk, ru, es, fr, pl, de } from "date-fns/locale";
-
-import { useTasksState } from "../../context/TasksContext";
 import type { Locale } from "react-day-picker";
+import { useTasksStore } from "@/stores/useTasksStore";
 const localeMap: Record<string, Locale> = {
   en: enUS,
   uk: uk,
@@ -27,7 +26,7 @@ export const TaskInfo = ({
   onClose: () => void;
   isOpen: boolean;
 }) => {
-  const { tasks } = useTasksState();
+  const tasks = useTasksStore((s) => s.tasks);
   const project = projects?.find((p) => p.id === task.projectId);
   const { t, i18n } = useTranslation();
   const safeTasks = tasks === null ? [] : tasks;

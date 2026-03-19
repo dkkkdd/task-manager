@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import type { Task } from "@/types/tasks";
-import { useTasksActions } from "@/context/TasksContext";
-
+import { useTasksStore } from "@/stores/useTasksStore";
 export function useTaskSelection(
   filteredTasks: Task[],
   onSelectionStart?: () => void,
 ) {
-  const { updateTask, deleteTask } = useTasksActions();
+  const updateTask = useTasksStore((s) => s.updateTask);
+  const deleteTask = useTasksStore((s) => s.deleteTask);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

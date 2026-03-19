@@ -1,40 +1,38 @@
-import { useCallback, useRef } from "react";
-import type { Task } from "@/types/tasks";
+import { memo, useCallback, useRef } from "react";
 import type { Project } from "@/types/project";
-import { useProjectsContext } from "@/context/ProjectsContext";
-import { useTasksState } from "@/context/TasksContext";
+import { useModeStore } from "@/stores/useModesStore";
+
+import { Link } from "react-router-dom";
 
 interface ProjectCardProps {
   project: Project;
-  onOpenMenu: (el: HTMLDivElement) => void;
+  onOpenMenu: (el: HTMLDivElement, projectId: string) => void;
   isMenuOpen: boolean;
 }
-export function ProjectItem({
+export const ProjectItem = memo(function ProjectItem({
   project,
   onOpenMenu,
   isMenuOpen,
 }: ProjectCardProps) {
-  const { selectedProjectId, changeMode } = useProjectsContext();
+  const openProject = useModeStore((s) => s.openProject);
+  const isActive = useModeStore((s) => s.selectedProjectId === project.id);
   const btnRef = useRef<HTMLDivElement>(null);
   const handleMenuClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       if (btnRef.current) {
-        onOpenMenu(btnRef.current);
+        onOpenMenu(btnRef.current, project.id);
       }
     },
-    [onOpenMenu],
+    [onOpenMenu, project.id],
   );
+
   const color = project.color;
-  const { tasks } = useTasksState();
-  const safeTasks = tasks === null ? [] : tasks;
-  const projectTasks = safeTasks.filter(
-    (t: Task) => t.projectId === project.id && t.isDone === false,
-  ).length;
 
   return (
-    <div
-      onClick={() => changeMode("project", project.id)}
+    <Link
+      to={`/project/${project.id}`}
+      onClick={() => openProject(project.id)}
       className={`
         group relative flex items-start justify-between w-full cursor-pointer
         transition-all duration-200
@@ -45,8 +43,8 @@ export function ProjectItem({
         md:items-center
       md:mb-0 md:bg-transparent md:shadow-none md:border-none
 
-        ${selectedProjectId === project.id ? "selected !bg-[#9d174d]/15 " : "dark:hover:bg-[#363636] hover:bg-[#dedede]"}
-        ${isMenuOpen ? "menu-active bg-[#dedede] dark:bg-[#363636]" : ""} }
+        ${isActive ? "selected !bg-[#9d174d]/15 " : "dark:hover:bg-[#363636] hover:bg-[#dedede]"}
+       ${isMenuOpen ? "menu-active bg-[#dedede] dark:bg-[#363636]" : ""}
       `}
     >
       <div className="flex items-center gap-4 md:gap-2 truncate flex-1 mr-2">
@@ -71,28 +69,15 @@ export function ProjectItem({
           >
             {project.title}
           </span>
-
-          <span className="md:hidden text-xs text-gray-400">
-            {projectTasks}
-          </span>
         </div>
       </div>
 
       <div className="relative shrink-0 ml-2 flex items-start md:items-center">
         <span
-          className={`
-            hidden md:block md:absolute md:right-5 text-[0.8em] text-black/50 dark:text-white/40
-            group-hover:opacity-0
-            ${isMenuOpen ? "opacity-0" : "opacity-100"}
-          `}
-        >
-          {projectTasks}
-        </span>
-
-        <span
           ref={btnRef}
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             handleMenuClick(e);
           }}
           className={`
@@ -113,6 +98,6 @@ export function ProjectItem({
           `}
         />
       </div>
-    </div>
+    </Link>
   );
-}
+});

@@ -17,9 +17,9 @@ import type { Task } from "@/types/tasks";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
 import { generateDatePresets } from "@/utils/dateFormatters";
 import { QuickBtn } from "@/components/QuickBtn";
-import { useTasksActions } from "@/context/TasksContext";
 import { Calendar } from "@/components/Calendar/Calendar";
 import { isSameDay } from "date-fns";
+import { useTasksStore } from "@/stores/useTasksStore";
 
 interface GlobalMenuProps {
   anchorEl: HTMLElement | null;
@@ -58,7 +58,7 @@ export const GlobalDropdown = ({
     placement: "left-end",
     middleware: [offset(4), flip(), shift()],
   });
-  const { updateTask } = useTasksActions();
+  const updateTask = useTasksStore((s) => s.updateTask);
   const { t } = useTranslation();
   const dismiss = useDismiss(context, {
     outsidePressEvent: "click",

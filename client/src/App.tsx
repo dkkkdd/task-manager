@@ -10,51 +10,26 @@ import { useTranslation } from "react-i18next";
 import { applyTheme } from "@/utils/userSettings";
 import { useAuthState } from "@/context/AuthProvider";
 import { AuthProvider } from "@/context/AuthContext";
-import { ProjectsProvider } from "@/context/ProjectsContext";
-import { TasksProvider } from "@/context/TasksContext";
-import { useProjectsContext } from "./context/ProjectsContext";
 import { AppLayout } from "@/components/AppLayout";
 import { TaskList } from "@/components/Tasks/TaskList";
 import { AuthPage } from "@/components/AuthPage";
 
-function TasksWrapper({ children }: { children: React.ReactNode }) {
-  const { mode, selectedProjectId } = useProjectsContext();
+export function ProtectedApp() {
   return (
-    <TasksProvider
-      mode={mode}
-      selectedProjectId={selectedProjectId}
-      key={`${mode}-${selectedProjectId}`}
-    >
-      {children}
-    </TasksProvider>
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<TaskList />} />
+        <Route path="/today" element={<TaskList />} />
+        <Route path="/completed" element={<TaskList />} />
+        <Route path="/overdue" element={<TaskList />} />
+        <Route path="/projects" element={<TaskList />} />
+        <Route path="/project/:projectId" element={<TaskList />} />
+        <Route path="/task/:taskId" element={<TaskList />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppLayout>
   );
 }
-export function MainContent() {
-  const { mode, projects, selectedProjectId } = useProjectsContext();
-
-  if (mode === "project") {
-    const projectExists = projects.find((p) => p.id === selectedProjectId);
-
-    if (!projectExists) {
-      return <div className="p-20 text-center">404: Проект не знайдено</div>;
-    }
-  }
-
-  return <TaskList />;
-}
-
-function ProtectedApp() {
-  return (
-    <ProjectsProvider>
-      <TasksWrapper>
-        <AppLayout>
-          <MainContent />
-        </AppLayout>
-      </TasksWrapper>
-    </ProjectsProvider>
-  );
-}
-
 function AppContent() {
   const { t } = useTranslation();
   const { isAuthenticated, loading } = useAuthState();
@@ -81,7 +56,6 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Публічні роути */}
       <Route
         path="/login"
         element={
@@ -100,17 +74,7 @@ function AppContent() {
       />
 
       {isAuthenticated ? (
-        <>
-          <Route path="/" element={<ProtectedApp />} />
-          <Route path="/today" element={<ProtectedApp />} />
-          <Route path="/completed" element={<ProtectedApp />} />
-          <Route path="/overdue" element={<ProtectedApp />} />
-          <Route path="/projects" element={<ProtectedApp />} />
-          <Route path="/project/:projectId" element={<ProtectedApp />} />
-          <Route path="/task/:taskId" element={<ProtectedApp />} />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </>
+        <Route path="/*" element={<ProtectedApp />} />
       ) : (
         <Route
           path="*"
