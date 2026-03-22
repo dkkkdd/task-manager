@@ -15,6 +15,8 @@ export const app = fastify({
 app.register(cors, {
   origin: ["https://task-managerr.pp.ua", "http://localhost:5173"],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 });
 
 app.register(cookie);
