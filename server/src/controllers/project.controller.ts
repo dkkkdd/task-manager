@@ -1,59 +1,73 @@
-import { Request, Response } from "express";
+import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../prisma";
+import { Prisma } from "@prisma/client";
 import {
   UpdateProjectSchema,
   CreateProjectSchema,
 } from "../schemas/project.schema";
-import { RequestHandler } from "express";
 
-export const getProjects: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-  if (!userId) return;
+export const getProjects = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.userId;
 
-  const projects = await prisma.project.findMany({
-    where: { userId },
-    include: {
-      sections: { orderBy: { order: "asc" } },
-      _count: { select: { tasks: true } },
-    },
-    orderBy: { order: "asc" },
-  });
+  try {
+    const projects = await prisma.project.findMany({
+      where: { userId },
+      include: {
+        sections: { orderBy: { order: "asc" } },
+        _count: { select: { tasks: true } },
+      },
+      orderBy: { order: "asc" },
+    });
 
-  res.json(projects);
+    return projects;
+  } catch (error) {
+    return reply.code(500).send({ error: "Failed to fetch projects" });
+  }
 };
 
-export const createProject: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-  if (!userId) return;
+export const createProject = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.userId;
 
-  const validation = CreateProjectSchema.safeParse(req.body);
+  const validation = CreateProjectSchema.safeParse(request.body);
   if (!validation.success) {
-    return res.status(400).json({ error: validation.error.format() });
+    return reply.code(400).send({ error: validation.error.format() });
   }
   const { title, color, favorites, order } = validation.data;
 
-  const project = await prisma.project.create({
-    data: {
-      title: title.trim(),
-      color,
-      favorites,
-      order,
-      userId,
-    },
-  });
+  try {
+    const project = await prisma.project.create({
+      data: {
+        title: title.trim(),
+        color,
+        favorites,
+        order,
+        userId,
+      },
+    });
 
-  res.status(201).json(project);
+    return reply.code(201).send(project);
+  } catch (error) {
+    return reply.code(500).send({ error: "Failed to create project" });
+  }
 };
 
-export const updateProject: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-  if (!userId) return;
+export const updateProject = async (
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) => {
+  const userId = request.userId;
 
-  const { id } = req.params;
+  const { id } = request.params;
 
-  const validation = UpdateProjectSchema.safeParse(req.body);
+  const validation = UpdateProjectSchema.safeParse(request.body);
   if (!validation.success) {
-    return res.status(400).json({ error: validation.error.format() });
+    return reply.code(400).send({ error: validation.error.format() });
   }
 
   const data = validation.data;
@@ -72,20 +86,26 @@ export const updateProject: RequestHandler = async (req, res) => {
       },
     });
 
-    res.json(updated);
+    return updated;
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return reply
+          .code(404)
+          .send({ error: "Project not found or access denied" });
+      }
+    }
     console.error(error);
-
-    return res
-      .status(404)
-      .json({ error: "Project not found or access denied" });
+    return reply.code(500).send({ error: "Internal server error" });
   }
 };
-export const deleteProject: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-  if (!userId) return;
 
-  const { id } = req.params;
+export const deleteProject = async (
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) => {
+  const userId = request.userId;
+  const { id } = request.params;
 
   try {
     const result = await prisma.project.deleteMany({
@@ -96,10 +116,11 @@ export const deleteProject: RequestHandler = async (req, res) => {
     });
 
     if (result.count === 0) {
-      return res.status(404).json({ error: "projects.not_found" });
+      return reply.code(404).send({ error: "projects.not_found" });
     }
-    res.status(204).send();
+
+    return reply.code(204).send();
   } catch (error) {
-    return res.status(500).json({ error: "server_error" });
+    return reply.code(500).send({ error: "server_error" });
   }
 };

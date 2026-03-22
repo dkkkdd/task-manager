@@ -1,35 +1,37 @@
-import { Request, Response } from "express";
+import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../prisma";
+import { Prisma } from "@prisma/client";
 import {
   UpdateSectionSchema,
   CreateSectionSchema,
 } from "../schemas/section.schema";
-import { RequestHandler } from "express";
 
-function normalizeId(id: string | string[] | undefined): string | undefined {
-  if (!id) return undefined;
-  return Array.isArray(id) ? id[0] : id;
+interface SectionParams {
+  id: string;
 }
 
-export const createSection: RequestHandler = async (req, res) => {
+export const createSection = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
   try {
-    const validation = CreateSectionSchema.safeParse(req.body);
+    const validation = CreateSectionSchema.safeParse(request.body);
     if (!validation.success) {
-      return res.status(400).json({ error: validation.error.format() });
+      return reply.code(400).send({ error: validation.error.format() });
     }
     const { title, projectId, order } = validation.data;
-    const userId = req.userId;
+    const userId = request.userId;
 
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    if (!title) return res.status(400).json({ error: "Title is required" });
+    if (!userId) return reply.code(401).send({ error: "Unauthorized" });
+    if (!title) return reply.code(400).send({ error: "Title is required" });
     if (!projectId)
-      return res.status(400).json({ error: "Project id is required" });
+      return reply.code(400).send({ error: "Project id is required" });
 
     const project = await prisma.project.findFirst({
       where: { id: String(projectId), userId },
     });
 
-    if (!project) return res.status(403).json({ error: "Access denied" });
+    if (!project) return reply.code(403).send({ error: "Access denied" });
 
     const section = await prisma.section.create({
       data: {
@@ -40,70 +42,81 @@ export const createSection: RequestHandler = async (req, res) => {
       },
     });
 
-    res.status(201).json(section);
+    return reply.code(201).send(section);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("CREATE SECTION ERROR:", errorMessage);
-    res.status(500).json({ error: errorMessage });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    request.log.error(`CREATE SECTION ERROR: ${message}`);
+    return reply.code(500).send({ error: message });
   }
 };
 
-export const updateSection: RequestHandler = async (req, res) => {
+export const updateSection = async (
+  request: FastifyRequest<{ Params: SectionParams }>,
+  reply: FastifyReply,
+) => {
   try {
-    const userId = req.userId;
-    const id = normalizeId(req.params.id);
-    const validation = UpdateSectionSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json({ error: validation.error.format() });
-    }
-    const { title, order } = validation.data;
+    const userId = request.userId;
+    const { id } = request.params;
 
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    if (!id) return res.status(400).json({ error: "Section id is required" });
+    const validation = UpdateSectionSchema.safeParse(request.body);
+    if (!validation.success) {
+      return reply.code(400).send({ error: validation.error.format() });
+    }
+
+    const { title, order } = validation.data;
+    if (!userId) return reply.code(401).send({ error: "Unauthorized" });
 
     const section = await prisma.section.findFirst({
       where: { id, project: { userId } },
     });
 
-    if (!section) return res.status(404).json({ error: "Section not found" });
+    if (!section) {
+      return reply.code(404).send({ error: "Section not found" });
+    }
 
     const updated = await prisma.section.update({
-      where: { id },
+      where: { id, userId },
       data: {
         ...(title !== undefined && { title: title.trim() }),
         ...(order !== undefined && { order: Number(order) }),
       },
     });
 
-    res.json(updated);
+    return updated;
   } catch (error) {
-    console.error("UPDATE SECTION ERROR:", error);
-    res.status(500).json({ error: "Failed to update section" });
+    request.log.error(error);
+    return reply.code(500).send({ error: "Failed to update section" });
   }
 };
 
-export const deleteSection: RequestHandler = async (req, res) => {
+export const deleteSection = async (
+  request: FastifyRequest<{ Params: SectionParams }>,
+  reply: FastifyReply,
+) => {
   try {
-    const userId = req.userId;
-    const id = normalizeId(req.params.id);
-
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    if (!id) return res.status(400).json({ error: "Section id is required" });
+    const userId = request.userId;
+    const { id } = request.params;
 
     const section = await prisma.section.findFirst({
       where: { id, project: { userId } },
     });
 
-    if (!section) return res.status(404).json({ error: "Section not found" });
+    if (!section) {
+      return reply.code(404).send({ error: "Section not found" });
+    }
 
     await prisma.section.delete({
-      where: { id },
+      where: { id, userId },
     });
 
-    res.status(204).send();
+    return reply.code(204).send();
   } catch (error) {
-    console.error("DELETE SECTION ERROR:", error);
-    res.status(500).json({ error: "Failed to delete section" });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return reply.code(404).send({ error: "Section not found" });
+      }
+    }
+    request.log.error(error);
+    return reply.code(500).send({ error: "Failed to delete section" });
   }
 };

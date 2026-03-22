@@ -1,19 +1,18 @@
-import { Request, Response } from "express";
+import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../prisma";
-import { RequestHandler } from "express";
-
+import { Prisma } from "@prisma/client";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import {
   UpdateUserSchema,
   CreateUserSchema,
   LoginUserSchema,
 } from "../schemas/auth.schema";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
 
-function setAuthCookie(res: Response, token: string) {
-  res.cookie("accessToken", token, {
+function setAuthCookie(reply: FastifyReply, token: string) {
+  reply.setCookie("accessToken", token, {
     httpOnly: true,
     secure: true,
     sameSite: "none",
@@ -22,14 +21,13 @@ function setAuthCookie(res: Response, token: string) {
   });
 }
 
-export async function register(req: Request, res: Response) {
-  const validation = CreateUserSchema.safeParse(req.body);
+export async function register(request: FastifyRequest, reply: FastifyReply) {
+  const validation = CreateUserSchema.safeParse(request.body);
   if (!validation.success) {
-    return res.status(400).json({ error: validation.error.format() });
+    return reply.code(400).send({ error: validation.error.format() });
   }
 
   const { userName, password, email } = validation.data;
-
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
@@ -41,18 +39,15 @@ export async function register(req: Request, res: Response) {
       },
       include: {
         _count: {
-          select: {
-            projects: true,
-            tasks: true,
-          },
+          select: { projects: true, tasks: true },
         },
       },
     });
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-    setAuthCookie(res, token);
+    setAuthCookie(reply, token);
 
-    res.status(201).json({
+    return reply.code(201).send({
       user: {
         id: user.id,
         email: user.email,
@@ -61,16 +56,16 @@ export async function register(req: Request, res: Response) {
       },
     });
   } catch (error) {
-    if ((error as any).code === "P2002") {
-      return res.status(400).json({ error: "User already exists" });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return reply.code(400).send({ error: "User already exists" });
+      }
     }
-    console.error("Register Error:", error);
-    res.status(500).json({ error: "Failed to register user" });
+    return reply.code(500).send({ error: "Failed to register user" });
   }
 }
-
-export const getMe: RequestHandler = async (req, res) => {
-  const userId = req.userId;
+export async function getMe(request: FastifyRequest, reply: FastifyReply) {
+  const userId = request.userId;
 
   try {
     const user = await prisma.user.findUnique({
@@ -90,21 +85,61 @@ export const getMe: RequestHandler = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return reply.code(404).send({ error: "User not found" });
     }
 
-    res.json(user);
+    return user;
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return reply.code(500).send({ error: "Internal server error" });
   }
-};
+}
 
-export const updateMe: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-  const validation = UpdateUserSchema.safeParse(req.body);
+export async function login(request: FastifyRequest, reply: FastifyReply) {
+  const validation = LoginUserSchema.safeParse(request.body);
   if (!validation.success) {
-    return res.status(400).json({ error: validation.error.format() });
+    return reply.code(400).send({ error: validation.error.format() });
   }
+
+  const { password, email } = validation.data;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        _count: {
+          select: { projects: true, tasks: true },
+        },
+      },
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return reply.code(401).send({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+    setAuthCookie(reply, token);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        userName: user.userName,
+        _count: user._count,
+      },
+    };
+  } catch (error) {
+    return reply.code(500).send({ error: "Internal server error" });
+  }
+}
+
+export async function updateMe(request: FastifyRequest, reply: FastifyReply) {
+  const userId = request.userId;
+  const validation = UpdateUserSchema.safeParse(request.body);
+
+  if (!validation.success) {
+    return reply.code(400).send({ error: validation.error.format() });
+  }
+
   const { userName, email } = validation.data;
 
   try {
@@ -122,86 +157,35 @@ export const updateMe: RequestHandler = async (req, res) => {
       },
     });
 
-    res.json(user);
+    return user;
   } catch (error) {
-    const e = error as { code?: string; message?: string };
-    if (e.code === "P2002") {
-      return res.status(400).json({ error: "User already exists" });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return reply.code(400).send({ error: "User already exists" });
+      }
     }
-    res.status(500).json({ error: "Internal server error" });
+    return reply.code(500).send({ error: "Internal server error" });
   }
-};
-
-export const login: RequestHandler = async (req, res) => {
-  const validation = LoginUserSchema.safeParse(req.body);
-  if (!validation.success) {
-    return res.status(400).json({ error: validation.error.format() });
-  }
-  const { password, email } = validation.data;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
-  }
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        _count: {
-          select: {
-            projects: true,
-            tasks: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-    setAuthCookie(res, token);
-
-    res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        _count: user._count,
-      },
-    });
-  } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-export const deleteAcc: RequestHandler = async (req, res) => {
-  const userId = req.userId;
-
+}
+export async function deleteAcc(request: FastifyRequest, reply: FastifyReply) {
   try {
     await prisma.user.delete({
-      where: { id: userId },
+      where: { id: request.userId },
     });
 
-    res.status(204).send();
+    return reply.code(204).send();
   } catch (error) {
-    console.error("Delete Acc Error:", error);
-    res.status(500).json({ error: "Failed to delete account" });
+    return reply.code(500).send({ error: "Failed to delete account" });
   }
-};
+}
 
-export async function logout(req: Request, res: Response) {
-  res.clearCookie("accessToken", {
+export async function logout(_request: FastifyRequest, reply: FastifyReply) {
+  reply.clearCookie("accessToken", {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-
     path: "/",
   });
-  res.status(200).json({ message: "Logged out successfully" });
+
+  return { message: "Logged out successfully" };
 }

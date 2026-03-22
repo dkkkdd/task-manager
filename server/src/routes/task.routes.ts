@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { FastifyInstance } from "fastify";
 import {
   getTasks,
   createTask,
@@ -6,16 +6,16 @@ import {
   deleteTask,
   moveTask,
 } from "../controllers/task.controller";
-
 import { authMiddleware } from "../middleware/auth";
-const router = Router();
 
-router.use(authMiddleware);
+export default async function taskRoutes(fastify: FastifyInstance) {
+  fastify.register(async (protectedRoutes) => {
+    protectedRoutes.addHook("preHandler", authMiddleware);
 
-router.get("/", getTasks);
-router.post("/", createTask);
-router.patch("/:id", updateTask);
-router.delete("/:id", deleteTask);
-router.patch("/:id/move", moveTask);
-
-export default router;
+    protectedRoutes.get("/", getTasks);
+    protectedRoutes.post("/", createTask);
+    protectedRoutes.patch("/:id", updateTask);
+    protectedRoutes.delete("/:id", deleteTask);
+    protectedRoutes.patch("/:id/move", moveTask);
+  });
+}

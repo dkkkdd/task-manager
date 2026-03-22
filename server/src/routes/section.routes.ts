@@ -1,17 +1,17 @@
-import { Router } from "express";
+import { FastifyInstance } from "fastify";
 import {
   createSection,
   updateSection,
   deleteSection,
 } from "../controllers/section.controller";
-
 import { authMiddleware } from "../middleware/auth";
-const router = Router();
 
-router.use(authMiddleware);
+export default async function sectionRoutes(fastify: FastifyInstance) {
+  fastify.register(async (protectedRoutes) => {
+    protectedRoutes.addHook("preHandler", authMiddleware);
 
-router.post("/", createSection);
-router.patch("/:id", updateSection);
-router.delete("/:id", deleteSection);
-
-export default router;
+    protectedRoutes.post("/", createSection);
+    protectedRoutes.patch("/:id", updateSection);
+    protectedRoutes.delete("/:id", deleteSection);
+  });
+}

@@ -1,18 +1,19 @@
-import { Router } from "express";
+import { FastifyInstance } from "fastify";
 import {
   getProjects,
   createProject,
   updateProject,
   deleteProject,
 } from "../controllers/project.controller";
-
 import { authMiddleware } from "../middleware/auth";
-const router = Router();
 
-router.use(authMiddleware);
-router.get("/", getProjects);
-router.post("/", createProject);
-router.patch("/:id", updateProject);
-router.delete("/:id", deleteProject);
+export default async function projectsRoutes(fastify: FastifyInstance) {
+  fastify.register(async (protectedRoutes) => {
+    protectedRoutes.addHook("preHandler", authMiddleware);
 
-export default router;
+    protectedRoutes.get("/", getProjects);
+    protectedRoutes.post("/", createProject);
+    protectedRoutes.patch("/:id", updateProject);
+    protectedRoutes.delete("/:id", deleteProject);
+  });
+}

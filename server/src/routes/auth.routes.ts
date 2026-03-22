@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { FastifyInstance } from "fastify";
 import {
   register,
   login,
@@ -9,13 +9,16 @@ import {
 } from "../controllers/auth.controller";
 import { authMiddleware } from "../middleware/auth";
 
-const router = Router();
+export default async function authRoutes(fastify: FastifyInstance) {
+  fastify.post("/register", register);
+  fastify.post("/login", login);
+  fastify.post("/logout", logout);
 
-router.get("/me", authMiddleware, getMe);
-router.post("/register", register);
-router.patch("/me", authMiddleware, updateMe);
-router.post("/login", login);
-router.post("/logout", logout);
-router.delete("/me", authMiddleware, deleteAcc);
+  fastify.register(async (protectedRoutes) => {
+    protectedRoutes.addHook("preHandler", authMiddleware);
 
-export default router;
+    protectedRoutes.get("/me", getMe);
+    protectedRoutes.patch("/me", updateMe);
+    protectedRoutes.delete("/me", deleteAcc);
+  });
+}
