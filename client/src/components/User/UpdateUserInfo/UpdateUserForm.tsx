@@ -1,115 +1,41 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuthActions, useAuthState } from "@/context/AuthProvider";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useUpdateUserForm } from "@/hooks/useUpdateUserForm";
+import { FloatingLabelInput } from "./FloatingLabelInput";
 
 export const UpdateUserInfoForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation();
-  const { updateUserInfo } = useAuthActions();
-  const { user } = useAuthState();
-  const isMobile = useIsMobile();
-
-  const [userName, setUserName] = useState(user?.userName || "");
-  const [userEmail, setUserEmail] = useState(user?.email || "");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await updateUserInfo({ userName, email: userEmail });
-    onClose();
-  };
+  const { formData, handleChange, handleSubmit } = useUpdateUserForm(onClose);
 
   return (
     <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
-      <h2 className="text-2 text-black dark:text-white border-b border-black/10 dark:border-[#d0d0d05a]/60 mb-2 pb-2 ">
-        {t("update_profile")}{" "}
+      <h2 className="font-semibold text-black dark:text-white border-b border-black/10 dark:border-white/10 mb-4 pb-2">
+        {t("update_profile")}
       </h2>
 
-      <div className="flex flex-col gap-4 mt-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="relative block">
-            <input
-              minLength={3}
-              maxLength={30}
-              placeholder=" "
-              required
-              autoFocus
-              autoComplete="username"
-              type="text"
-              value={userName}
-              className="peer w-full p-[0.9em] text-[0.8em] rounded-[10px] bg-transparent text-black dark:text-white outline outline-1 outline-black/20 dark:outline-white/10 focus:outline-2 focus:outline-[#4270d1] transition-all"
-              onChange={(e) => setUserName(e.target.value)}
-            />
-            <span className="absolute top-[0.55em] left-[0.5em] px-[0.5em] bg-white dark:bg-[#242424] text-gray-500 transition-all pointer-events-none peer-focus:-top-[0.7em] peer-focus:text-[0.75em] peer-focus:text-[#4270d1] peer-[:not(:placeholder-shown)]:-top-[0.7em] peer-[:not(:placeholder-shown)]:text-[0.75em]">
-              {t("your_name")}
-            </span>
-          </label>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="relative block">
-            <input
-              minLength={3}
-              maxLength={30}
-              placeholder=" "
-              required
-              autoComplete="email"
-              type="email"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              className="peer w-full p-[0.9em] text-[0.8em] rounded-[10px] bg-transparent text-black dark:text-white outline outline-1 outline-black/20 dark:outline-white/10 focus:outline-2 focus:outline-[#4270d1] transition-all"
-            />
-            <span className="absolute top-[0.55em] left-[0.5em] px-[0.5em] bg-white dark:bg-[#242424] text-gray-500 transition-all pointer-events-none peer-focus:-top-[0.7em] peer-focus:text-[0.75em] peer-focus:text-[#4270d1] peer-[:not(:placeholder-shown)]:-top-[0.7em] peer-[:not(:placeholder-shown)]:text-[0.75em]">
-              {t("email_label")}
-            </span>
-          </label>
-        </div>
+      <div className="flex flex-col gap-5 mt-4">
+        <FloatingLabelInput
+          label={t("your_name")}
+          name="userName"
+          value={formData.userName}
+          onChange={handleChange}
+          required
+          autoFocus
+        />
+        <FloatingLabelInput
+          label={t("email_label")}
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
       </div>
-      <div
-        className={`flex gap-3 mt-6 ${isMobile ? "flex-col" : "justify-end"}`}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="
-      w-full sm:w-auto
-      px-5 py-2.5
-      rounded-xl
-      font-medium
-      transition-all duration-200
 
-      bg-gray-100 text-gray-900
-      hover:bg-gray-200
-
-      dark:bg-white/10 dark:text-white
-      dark:hover:bg-white/20
-
-      focus:outline-none
-      focus:ring-2 focus:ring-pink-500
-    "
-        >
+      <div className="flex gap-3 mt-8 justify-end">
+        <button type="button" onClick={onClose} className="btn-secondary">
           {t("cancel")}
         </button>
-
-        <button
-          type="submit"
-          className="
-      w-full sm:w-auto
-      px-5 py-2.5
-      rounded-xl
-      font-semibold
-      transition-all duration-200
-
-      bg-pink-500 text-white
-      hover:bg-pink-600
-
-      dark:bg-pink-600 dark:hover:bg-pink-500
-
-      shadow-sm hover:shadow-md
-
-      focus:outline-none
-      focus:ring-2 focus:ring-pink-400
-    "
-        >
+        <button type="submit" className="btn-primary-pink">
           {t("save_changes")}
         </button>
       </div>

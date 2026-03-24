@@ -1,6 +1,8 @@
 import { useModeStore } from "@/stores/useModesStore";
 import { useTaskListStore } from "@/stores/useTaskListStore";
+import { lazy } from "react";
 import { useTranslation } from "react-i18next";
+const TaskForm = lazy(() => import("./Tasks/TaskForm/TaskForm"));
 
 const EMPTY_STATES_CONFIG = {
   inbox: {
@@ -35,7 +37,16 @@ export const EmptyState = () => {
   const mode = useModeStore((s) => s.mode);
   const openForm = useTaskListStore((s) => s.openForm);
   const setOpenForm = useTaskListStore((s) => s.setOpenForm);
-  if (!openForm) return;
+
+  if (openForm) {
+    return (
+      <TaskForm
+        openForm={openForm}
+        formMode="create"
+        onClose={() => setOpenForm(false)}
+      />
+    );
+  }
 
   const config =
     EMPTY_STATES_CONFIG[mode as keyof typeof EMPTY_STATES_CONFIG] ||
@@ -53,7 +64,7 @@ export const EmptyState = () => {
         {t(config.titleKey)}
       </h3>
 
-      <p className="text-sm text-black/40 dark:text-white/40 max-w-[200px] leading-relaxed">
+      <p className="text-sm text-black/40 dark:text-white/60 max-w-[200px] leading-relaxed">
         {t(config.descKey)}
       </p>
 
@@ -62,7 +73,7 @@ export const EmptyState = () => {
           onClick={() => setOpenForm(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-full border border-black/10 dark:border-white/5 mt-3 
                    hover:border-[#9d174d]/50 hover:bg-[#9d174d]/5 transition-all duration-200
-                   text-[13px] text-black/40 dark:text-white/40 hover:text-[#9d174d] cursor-pointer"
+                   text-[13px] text-black/40 dark:text-white/60 hover:text-[#9d174d] cursor-pointer"
         >
           <svg
             width="10"

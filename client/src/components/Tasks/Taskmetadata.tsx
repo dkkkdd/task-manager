@@ -5,7 +5,7 @@ import type { Project } from "@/types/project";
 import { formatFullDate } from "@/utils/dateFormatters";
 import { Calendar } from "@/components/Calendar/Calendar";
 import type { Locale } from "react-day-picker";
-import { localeMap } from "@/i18n";
+import { dateLocales } from "@/i18n";
 import { enUS } from "date-fns/locale";
 
 interface TaskMetadataProps {
@@ -14,8 +14,7 @@ interface TaskMetadataProps {
   completedAt?: Date | null;
   subCount: number | null;
   subDone: number | null;
-  projectId?: string | null;
-  projects: Project[] | null;
+  projectOfTask: Project | null;
   mode: string;
   isDone: boolean;
   isSelectionMode?: boolean;
@@ -39,8 +38,7 @@ export const TaskMetadata = memo(function TaskMetadata({
   completedAt,
   subCount,
   subDone,
-  projectId,
-  projects,
+  projectOfTask,
   mode,
   isDone,
   isSelectionMode,
@@ -51,10 +49,9 @@ export const TaskMetadata = memo(function TaskMetadata({
   onProjectClick,
 }: TaskMetadataProps) {
   const { t, i18n } = useTranslation();
-  const langKey = i18n.language.split("-")[0];
-  const locale = localeMap[langKey] ?? enUS;
 
-  const projectOfTask = projects?.find((p) => p.id === projectId);
+  const locale = dateLocales[i18n.language] || enUS;
+
   const isCompletedMode = mode === "completed";
   const currentDeadlineStr = deadline ? new Date(deadline) : null;
 
@@ -80,7 +77,7 @@ export const TaskMetadata = memo(function TaskMetadata({
   return (
     <div className="flex items-center text-[12px] md:text-[15px] gap-2 w-full flex-wrap">
       {subCount !== 0 && (
-        <div className="text-gray-500 dark:text-[#777] flex items-center gap-1">
+        <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
           <span className="icon-pie-chart" />
           {subDone}/{subCount}
         </div>
@@ -129,7 +126,7 @@ export const TaskMetadata = memo(function TaskMetadata({
         <span
           onClick={(e) => {
             e.stopPropagation();
-            onProjectClick(projectId || null);
+            onProjectClick(projectOfTask?.id || null);
           }}
           className="px-1.5 py-0.5 text-[8px] md:text-[10px] flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer rounded-md transition-colors"
         >

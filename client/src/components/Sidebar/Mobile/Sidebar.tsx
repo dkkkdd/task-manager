@@ -1,28 +1,29 @@
-import { AnimatePresence, motion } from "framer-motion";
+// import { AnimatePresence, motion } from "framer-motion";
 import { Drawer } from "vaul";
 import { ProjectPage } from "@/components/Projects/ProjectPage";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { useModeStore } from "@/stores/useModesStore";
+// import { useModeStore } from "@/stores/useModesStore";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import type { TaskMode } from "../Desktop/SidebarNavigation";
+// import { Link } from "react-router-dom";
+// import type { TaskMode } from "@/types/navigation";
+import { SidebarNavigation } from "../SidebarNavigation";
 
-const menuItems: { id: TaskMode; icon: string; path: string }[] = [
-  { id: "inbox", icon: "icon-inbox", path: "/" },
-  { id: "today", icon: "icon-calendar-_1", path: "/today" },
-  { id: "completed", icon: "icon-checkmark", path: "/completed" },
-  { id: "overdue", icon: "icon-history", path: "/overdue" },
-  { id: "projects", icon: "icon-heart-svgrepo-com", path: "/projects" },
-];
+// const menuItems: { id: TaskMode; icon: string; path: string }[] = [
+//   { id: "inbox", icon: "icon-inbox", path: "/" },
+//   { id: "today", icon: "icon-calendar-_1", path: "/today" },
+//   { id: "completed", icon: "icon-checkmark", path: "/completed" },
+//   { id: "overdue", icon: "icon-history", path: "/overdue" },
+//   { id: "projects", icon: "icon-heart-svgrepo-com", path: "/projects" },
+// ];
 
-export function MobileMenu() {
-  const mode = useModeStore((s) => s.mode);
-  const setMode = useModeStore((s) => s.setMode);
+function MobileMenu() {
+  // const mode = useModeStore((s) => s.mode);
+  // const setMode = useModeStore((s) => s.setMode);
   const [showProjects, setShowProjects] = useState(false);
 
   return (
     <>
-      <nav className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] z-50 md:hidden rounded-2xl bg-white/70 dark:bg-[#1f1f1f]/70 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 pb-[env(safe-area-inset-bottom)]">
+      {/* <nav className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] z-50 md:hidden rounded-2xl bg-white/70 dark:bg-[#1f1f1f]/70 backdrop-blur-2xl border-t border-black/5 dark:border-white/10 pb-[env(safe-area-inset-bottom)]">
         <div className="flex h-14 items-center">
           {menuItems.map((item) => {
             const isActive =
@@ -84,7 +85,15 @@ export function MobileMenu() {
             );
           })}
         </div>
-      </nav>
+      </nav> */}
+
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 
+      w-[90%] z-50 md:hidden rounded-2xl bg-white/70 dark:bg-[#1f1f1f]/70
+       backdrop-blur-2xl border-t border-black/5 dark:border-white/10 pb-[env(safe-area-inset-bottom)]"
+      >
+        <SidebarNavigation />
+      </div>
 
       <Drawer.Root
         open={showProjects}
@@ -110,3 +119,4 @@ export function MobileMenu() {
     </>
   );
 }
+export default MobileMenu;

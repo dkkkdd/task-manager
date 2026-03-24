@@ -32,7 +32,7 @@ export const UserInfoDesktop = (props: UserInfoProps) => {
           setOpenConfirmDelete={props.setOpenConfirmDelete}
           setOpenForm={props.setOpenForm}
           projectsCount={props.projectsCount}
-          undoneTasksCount={props.undoneTasksCount}
+          tasksCount={props.tasksCount}
           timeAgo={props.timeAgo}
           formattedDate={props.formattedDate}
           handleThemeChange={props.handleThemeChange}

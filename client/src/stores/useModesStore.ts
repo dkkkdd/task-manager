@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { useTasksStore } from "./useTasksStore";
-
+import { useTaskListStore } from "./useTaskListStore";
+import type { TaskMode } from "@/types/navigation";
 function getModeFromPath(): {
   mode: TaskMode;
   selectedProjectId: string | null;
@@ -19,14 +19,6 @@ function getModeFromPath(): {
   return { mode: "inbox", selectedProjectId: null };
 }
 
-export type TaskMode =
-  | "project"
-  | "inbox"
-  | "today"
-  | "completed"
-  | "overdue"
-  | "projects";
-
 interface ModeStore {
   mode: TaskMode;
   selectedProjectId: string | null;
@@ -38,24 +30,42 @@ interface ModeStore {
   setShowAll: (val: boolean) => void;
 }
 
-export const useModeStore = create<ModeStore>((set) => ({
+export const useModeStore = create<ModeStore>((set, get) => ({
   ...getModeFromPath(),
-
   showAll: localStorage.getItem("showAll") === "true",
 
-  setMode: (mode) => {
-    set({ mode, selectedProjectId: null });
-    useTasksStore.getState().fetchTasks();
+  setMode: (newMode, projectId) => {
+    const current = get();
+    const nextProjectId = projectId ?? null;
+
+    if (
+      current.mode === newMode &&
+      current.selectedProjectId === nextProjectId
+    ) {
+      return;
+    }
+
+    useTaskListStore.getState().resetForms();
+    set({ mode: newMode, selectedProjectId: nextProjectId });
   },
-  setSelectedProjectId: (id) =>
-    set({
-      selectedProjectId: id,
-    }),
 
   openProject: (id) => {
+    const current = get();
+
+    if (current.mode === "project" && current.selectedProjectId === id) {
+      return;
+    }
+
+    useTaskListStore.getState().resetForms();
     set({ mode: "project", selectedProjectId: id });
-    useTasksStore.getState().fetchTasks();
   },
+
+  setSelectedProjectId: (id) => {
+    if (get().selectedProjectId === id) return;
+    useTaskListStore.getState().resetForms();
+    set({ selectedProjectId: id });
+  },
+
   setShowAll: (val) => {
     localStorage.setItem("showAll", String(val));
     set({ showAll: val });

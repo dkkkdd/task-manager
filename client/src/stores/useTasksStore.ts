@@ -1,47 +1,13 @@
 import { create } from "zustand";
 import type { Task } from "@/types/tasks";
 import { tasksApi } from "@/api/tasks";
+import type { FetchTasksParams } from "@/api/tasks";
 import { useModeStore } from "./useModesStore";
-
-const sortTasks = (list: Task[]): Task[] =>
-  [...list].map((node) => ({
-    ...node,
-    subtasks: node.subtasks ? sortTasks(node.subtasks) : [],
-  }));
-
-const updateNode = (
-  list: Task[],
-  id: string,
-  patch: Partial<Task> | null,
-): Task[] =>
-  list
-    .filter((node) => (patch === null ? node.id !== id : true))
-    .map((node) => {
-      if (node.id === id) return { ...node, ...patch };
-      if (node.subtasks?.length)
-        return { ...node, subtasks: updateNode(node.subtasks, id, patch) };
-      return node;
-    });
-
-const addSubtaskNode = (
-  list: Task[],
-  parentId: string,
-  newNode: Task,
-): Task[] =>
-  list.map((node) => {
-    if (node.id === parentId)
-      return { ...node, subtasks: [...(node.subtasks || []), newNode] };
-    if (node.subtasks?.length)
-      return {
-        ...node,
-        subtasks: addSubtaskNode(node.subtasks, parentId, newNode),
-      };
-    return node;
-  });
 
 interface TasksStore {
   tasks: Task[];
   loading: boolean;
+
   filters: { mode?: string; selectedProjectId?: string | null };
   fetchTasks: () => Promise<void>;
   createTask: (
@@ -51,28 +17,33 @@ interface TasksStore {
   updateDone: (id: string, done: boolean) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   setFilters: (mode: string, projectId?: string | null) => void;
-  // getFilteredTasks: () => Task[];
 }
 
 export const useTasksStore = create<TasksStore>((set, get) => ({
   tasks: [],
   loading: false,
+
   filters: {},
 
   setFilters: (mode, selectedProjectId) =>
     set({ filters: { mode, selectedProjectId } }),
 
   fetchTasks: async () => {
-    const { mode, selectedProjectId } = useModeStore.getState();
-
-    set({ tasks: [], loading: true });
+    set({ loading: true });
 
     try {
-      const data = await tasksApi.fetchTasks({
-        mode,
-        projectId: selectedProjectId,
-      });
-      set({ tasks: sortTasks(data) });
+      const { mode, selectedProjectId } = useModeStore.getState();
+
+      const params: FetchTasksParams = { mode };
+
+      if (mode === "project" && selectedProjectId) {
+        params.projectId = selectedProjectId;
+      }
+
+      const data = await tasksApi.fetchTasks(params);
+      set({ tasks: data });
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error);
     } finally {
       set({ loading: false });
     }
@@ -80,7 +51,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
 
   createTask: async (data) => {
     const tempId = `temp-${Date.now()}`;
-    const tempNode: Task = {
+    const tempTask: Task = {
       id: tempId,
       title: data.title || "",
       isDone: false,
@@ -97,55 +68,148 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
 
     set((state) => ({
       tasks: data.parentId
-        ? addSubtaskNode(state.tasks, data.parentId, tempNode)
-        : [...state.tasks, tempNode],
+        ? state.tasks.map((task) =>
+            task.id === data.parentId
+              ? { ...task, subtasks: [...(task.subtasks || []), tempTask] }
+              : task,
+          )
+        : [...state.tasks, tempTask],
     }));
 
     try {
-      const real = await tasksApi.createTask({ ...data });
+      const realTask = await tasksApi.createTask(data);
+
       set((state) => ({
-        tasks: sortTasks(updateNode(state.tasks, tempId, real)),
+        tasks: data.parentId
+          ? state.tasks.map((task) =>
+              task.id === data.parentId
+                ? {
+                    ...task,
+                    subtasks: task.subtasks?.map((s) =>
+                      s.id === tempId ? realTask : s,
+                    ),
+                  }
+                : task,
+            )
+          : state.tasks.map((task) =>
+              task.id === tempId
+                ? { ...realTask, subtasks: task.subtasks }
+                : task,
+            ),
       }));
     } catch {
-      set((state) => ({ tasks: updateNode(state.tasks, tempId, null) }));
+      set((state) => ({
+        tasks: data.parentId
+          ? state.tasks.map((task) =>
+              task.id === data.parentId
+                ? {
+                    ...task,
+                    subtasks: task.subtasks?.filter((s) => s.id !== tempId),
+                  }
+                : task,
+            )
+          : state.tasks.filter((task) => task.id !== tempId),
+      }));
     }
   },
 
   updateTask: async (id, data) => {
     const snapshot = get().tasks;
-    // Оптимістично оновлюємо
-    set((state) => ({ tasks: updateNode(state.tasks, id, data) }));
+    const { mode } = useModeStore.getState();
+
+    set((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id === id) return { ...task, ...data };
+        if (task.subtasks?.some((s) => s.id === id)) {
+          return {
+            ...task,
+            subtasks: task.subtasks.map((s) =>
+              s.id === id ? { ...s, ...data } : s,
+            ),
+          };
+        }
+        return task;
+      }),
+    }));
 
     try {
-      const response = await tasksApi.updateInfo(id, data);
-      const updatedRealTask = response; // Отримуємо реальні дані від сервера
+      const real = await tasksApi.updateInfo(id, data);
+
+      if (
+        data.deadline !== undefined &&
+        (mode === "today" || mode === "overdue")
+      ) {
+        set((state) => ({
+          tasks: state.tasks.filter((task) => task.id !== id),
+        }));
+        return;
+      }
 
       set((state) => ({
-        tasks: sortTasks(updateNode(state.tasks, id, updatedRealTask)),
+        tasks: state.tasks.map((task) => {
+          if (task.id === id) return { ...task, ...real };
+          if (task.subtasks?.some((s) => s.id === id)) {
+            return {
+              ...task,
+              subtasks: task.subtasks.map((s) =>
+                s.id === id ? { ...s, ...real } : s,
+              ),
+            };
+          }
+          return task;
+        }),
       }));
     } catch {
-      // Якщо сервер видав помилку — відкочуємо до знімку (snapshot)
       set({ tasks: snapshot });
     }
   },
 
   updateDone: async (id, done) => {
     const snapshot = get().tasks;
-    const patch: Partial<Task> = {
-      isDone: done,
-      completedAt: done ? new Date() : null,
-    };
-    set((state) => ({ tasks: sortTasks(updateNode(state.tasks, id, patch)) }));
+    const { mode } = useModeStore.getState();
+    const patch = { isDone: done, completedAt: done ? new Date() : null };
+
+    set((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id === id) return { ...task, ...patch };
+        if (task.subtasks?.some((s) => s.id === id)) {
+          return {
+            ...task,
+            subtasks: task.subtasks.map((s) =>
+              s.id === id ? { ...s, ...patch } : s,
+            ),
+          };
+        }
+        return task;
+      }),
+    }));
+
     try {
       await tasksApi.updateStatus(id, done);
+
+      if (mode === "completed" && !done) {
+        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
+      }
+      if ((mode === "today" || mode === "overdue") && done) {
+        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
+      }
     } catch {
       set({ tasks: snapshot });
     }
   },
 
-  deleteTask: async (id) => {
+  deleteTask: async (id: string) => {
     const snapshot = get().tasks;
-    set((state) => ({ tasks: updateNode(state.tasks, id, null) }));
+
+    set((state) => ({
+      tasks: state.tasks
+        .filter((task) => task.id !== id)
+        .map((task) => ({
+          ...task,
+          subtasks: task.subtasks?.filter((s) => s.id !== id) ?? [],
+        })),
+    }));
+
     try {
       await tasksApi.deleteTask(id);
     } catch {

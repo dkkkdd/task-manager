@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserInfoBaseProps } from "@/types/UserInfo";
 import { THEME_OPTIONS, LANG_OPTIONS } from "@/utils/userSettings";
-import { useAuthState } from "@/context/AuthProvider";
+import { useAuthActions, useAuthState } from "@/context/AuthProvider";
 import { Select } from "@/components/Select";
 
 export const UserInfoBase = ({
@@ -11,7 +11,7 @@ export const UserInfoBase = ({
   setOpenConfirmDelete,
   setOpenForm,
   projectsCount,
-  undoneTasksCount,
+  tasksCount,
   timeAgo,
   formattedDate,
   handleThemeChange,
@@ -20,7 +20,11 @@ export const UserInfoBase = ({
 }: UserInfoBaseProps) => {
   const { user } = useAuthState();
   const { t, i18n } = useTranslation();
+  const { getMe } = useAuthActions();
 
+  useEffect(() => {
+    getMe();
+  }, []);
   const themeOptions = useMemo(
     () =>
       THEME_OPTIONS.map((opt) => ({
@@ -71,7 +75,7 @@ export const UserInfoBase = ({
           <div className="bg-gray-50 dark:bg-[#2a2a2a] p-3 rounded-lg flex flex-col items-center">
             <span className="icon-pushpin text-[#9d174d] text-lg mb-1" />
             <span className="text-xl font-bold text-black dark:text-white">
-              {undoneTasksCount}
+              {tasksCount}
             </span>
             <span className="text-[10px] text-gray-500 uppercase font-semibold">
               {t("active_tasks_count")}

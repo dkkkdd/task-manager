@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { enUS, uk, ru, es, fr, pl, de } from "date-fns/locale";
 import type { Locale } from "react-day-picker";
-import { useTasksStore } from "@/stores/useTasksStore";
+
 const localeMap: Record<string, Locale> = {
   en: enUS,
   uk: uk,
@@ -15,33 +15,29 @@ const localeMap: Record<string, Locale> = {
   de: de,
 };
 
-export const TaskInfo = ({
+const TaskInfo = ({
   task,
-  projects,
+  parentTask,
+  project,
   onClose,
   isOpen,
 }: {
   task: Task;
-  projects: Project[] | null;
+  parentTask?: Task;
+  project: Project | null;
   onClose: () => void;
   isOpen: boolean;
 }) => {
-  const tasks = useTasksStore((s) => s.tasks);
-  const project = projects?.find((p) => p.id === task.projectId);
   const { t, i18n } = useTranslation();
-  const safeTasks = tasks === null ? [] : tasks;
-  const parentTask = task.parentId
-    ? safeTasks.find((t: Task) => t.id === task.parentId)
-    : null;
+
   const formattedDeadline = task.deadline
     ? format(new Date(task.deadline), "d MMMM yyyy", {
         locale: localeMap[i18n.language] ?? enUS,
       })
     : null;
   const subtasks = task.subtasks;
-  const safeSubTasks = subtasks === null ? [] : subtasks;
-  const subtasksCount = safeSubTasks?.length;
-  const subtasksDone = safeSubTasks?.filter((s: Task) => s.isDone).length;
+  const subtasksCount = subtasks?.length || null;
+  const subtasksDone = subtasks?.filter((s: Task) => s.isDone).length;
 
   return (
     <div
@@ -89,7 +85,7 @@ export const TaskInfo = ({
             </div>
             <div className="ml-4 flex-1">
               <h3
-                className={`text-xl font-bold leading-tight ${
+                className={`text-xl font-bold leading-tight break-words max-w-[300px] ${
                   task.isDone
                     ? "text-gray-400 line-through"
                     : "text-black dark:text-white"
@@ -129,50 +125,51 @@ export const TaskInfo = ({
                 </span>
               </div>
 
-              <div className="bg-gray-50 dark:bg-[#2a2a2a] p-4 rounded-lg border border-black/5 dark:border-white/5 flex flex-col items-start">
-                <span className="icon-pie-chart text-[#9d174d] text-lg mb-2" />
-                <span className="text-lg font-bold text-black dark:text-white">
-                  {subtasksDone} / {subtasksCount}
-                </span>
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                  {t("subtasks")}
-                </span>
-              </div>
+              {subtasksCount && (
+                <div className="bg-gray-50 dark:bg-[#2a2a2a] p-4 rounded-lg border border-black/5 dark:border-white/5 flex flex-col items-start">
+                  <span className="icon-pie-chart text-[#9d174d] text-lg mb-2" />
+                  <span className="text-lg font-bold text-black dark:text-white">
+                    {subtasksDone} / {subtasksCount}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                    {t("subtasks")}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {subtasksCount ||
-              (0 > 0 && (
-                <div className="bg-gray-50/50 dark:bg-[#2a2a2a]/30 rounded-lg border border-black/5 dark:border-white/5 p-3 space-y-2">
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold block px-1">
-                    {t("subtasks_list")}
-                  </span>
-                  <div className="max-h-[120px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                    {safeSubTasks?.map((sub: Task) => (
-                      <div
-                        key={sub.id}
-                        className="flex items-center gap-3 p-2 bg-white dark:bg-white/5 rounded-md border border-black/5 dark:border-white/5"
+            {subtasksCount && (
+              <div className="bg-gray-50/50 dark:bg-[#2a2a2a]/30 rounded-lg border border-black/5 dark:border-white/5 p-3 space-y-2">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold block px-1">
+                  {t("subtasks_list")}
+                </span>
+                <div className="max-h-[120px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                  {subtasks?.map((sub: Task) => (
+                    <div
+                      key={sub.id}
+                      className="flex items-center gap-3 p-2 bg-white dark:bg-white/5 rounded-md border border-black/5 dark:border-white/5"
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          sub.isDone
+                            ? "bg-green-500"
+                            : "bg-gray-300 dark:bg-[#555]"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm flex-1 truncate ${
+                          sub.isDone
+                            ? "text-gray-400 line-through"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
                       >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            sub.isDone
-                              ? "bg-green-500"
-                              : "bg-gray-300 dark:bg-[#555]"
-                          }`}
-                        />
-                        <span
-                          className={`text-sm flex-1 truncate ${
-                            sub.isDone
-                              ? "text-gray-400 line-through"
-                              : "text-gray-700 dark:text-gray-300"
-                          }`}
-                        >
-                          {sub.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                        {sub.title}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )}
 
             {task.deadline && (
               <div className="bg-gray-50 dark:bg-[#2a2a2a]/50 p-4 rounded-lg border border-black/5 dark:border-white/5 flex items-center space-x-4">
@@ -200,3 +197,4 @@ export const TaskInfo = ({
     </div>
   );
 };
+export default TaskInfo;

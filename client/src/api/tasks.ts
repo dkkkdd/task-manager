@@ -1,12 +1,8 @@
-import { api } from "@/api//client";
+import { api } from "@/api/client";
 import type { Task } from "@/types/tasks";
 
 export type FetchTasksParams = {
   projectId?: string | null;
-  // sectionId?: string | null;
-  // parentId?: string | null;
-  // isDone?: boolean;
-  // deadline?: string;
   mode: string;
 };
 
@@ -15,11 +11,8 @@ export const tasksApi = {
     const query = new URLSearchParams();
 
     if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query.append(key, String(value));
-        }
-      });
+      if (params.mode) query.append("mode", params.mode);
+      if (params.projectId) query.append("projectId", params.projectId);
     }
 
     return api.get<Task[]>(`/tasks?${query.toString()}`, { signal });

@@ -26,21 +26,18 @@ export const ProjectForm = ({
   const [color, setColor] = useState(
     initialProject?.color ?? OPTIONS[0]?.value ?? "#8c8c8c",
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { t } = useTranslation();
   // const inputRef = useRef<HTMLInputElement>(null);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || isSubmitting) return;
+    if (!name.trim()) return;
 
     try {
-      setIsSubmitting(true);
       await onSubmit({ title: name, color });
       onClose();
     } catch (error) {
       console.error("Failed to submit project:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -136,7 +133,7 @@ export const ProjectForm = ({
 
             <button
               type="submit"
-              disabled={!name.trim() || isSubmitting}
+              disabled={!name.trim()}
               className="
         flex-1
         py-3
@@ -146,11 +143,7 @@ export const ProjectForm = ({
         disabled:opacity-50
       "
             >
-              {isSubmitting
-                ? "…"
-                : mode === "create"
-                  ? t("add_btn")
-                  : t("save_btn")}
+              {mode === "create" ? t("add_btn") : t("save_btn")}
             </button>
           </div>
         </form>
@@ -224,21 +217,16 @@ export const ProjectForm = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  disabled={isSubmitting}
                   className="cursor-pointer px-5 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
                 >
                   {t("cancel")}
                 </button>
                 <button
                   type="submit"
-                  disabled={!name.trim() || isSubmitting}
+                  disabled={!name.trim()}
                   className="cursor-pointer px-6 py-2 bg-[#9d174d] hover:shadow-[0_0_10px_#9d174d] disabled:opacity-50 disabled:hover:shadow-none rounded-lg text-white transition-all"
                 >
-                  {isSubmitting
-                    ? "..."
-                    : mode === "create"
-                      ? t("add_btn")
-                      : t("save_btn")}
+                  {mode === "create" ? t("add_btn") : t("save_btn")}
                 </button>
               </div>
             </div>

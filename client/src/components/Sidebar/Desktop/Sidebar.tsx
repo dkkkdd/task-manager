@@ -1,21 +1,12 @@
 import { useEffect } from "react";
 import OpenForm from "../OpenForm";
-import { FavoriteProjects } from "@/components/Projects/FavoriteProjectsSection";
+import FavoriteProjects from "@/components/Projects/FavoriteProjectsSection";
 import { ProjectsSection } from "@/components/Projects/ProjectSection";
-import { SidebarNavigation } from "@/components/Sidebar/Desktop/SidebarNavigation";
-
-export type TaskMode =
-  | "project"
-  | "inbox"
-  | "today"
-  | "completed"
-  | "overdue"
-  | "projects";
-
+import { SidebarNavigation } from "../SidebarNavigation";
 import ShowUserInfo from "../ShowUserInfo";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 
-export function Sidebar({ collapsed }: { collapsed: boolean }) {
+function Sidebar({ collapsed }: { collapsed: boolean }) {
   const fetchProjects = useProjectsStore((s) => s.fetchProjects);
   useEffect(() => {
     fetchProjects();
@@ -27,10 +18,8 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
        overflow-y-auto
         relative shrink-0 transition-all duration-350 ease-in-out
         bg-[#eee] dark:bg-[#232323] hidden md:block
-    relative shrink-0 transition-all duration-350 ease-in-out
-    bg-[#eee] dark:bg-[#232323]
-    w-[22em]
-        ${collapsed ? "max-w-0" : "max-w-[22em]"}
+    w-full
+        ${collapsed ? "max-w-0" : "max-w-[19em]"}
       `}
     >
       <div
@@ -56,3 +45,4 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
     </aside>
   );
 }
+export default Sidebar;

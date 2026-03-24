@@ -18,13 +18,7 @@ export function ProtectedApp() {
   return (
     <AppLayout>
       <Routes>
-        <Route path="/" element={<TaskList />} />
-        <Route path="/today" element={<TaskList />} />
-        <Route path="/completed" element={<TaskList />} />
-        <Route path="/overdue" element={<TaskList />} />
-        <Route path="/projects" element={<TaskList />} />
-        <Route path="/project/:projectId" element={<TaskList />} />
-        <Route path="/task/:taskId" element={<TaskList />} />
+        <Route path="*" element={<TaskList />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppLayout>

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { QuickBtn } from "@/components/QuickBtn";
 import { format, isSameDay } from "date-fns";
-import { localeMap } from "@/i18n";
+import { dateLocales } from "@/i18n";
 
 interface QuickDateButtonsProps {
   dates: {
@@ -27,7 +27,7 @@ export const QuickDateButtons = ({
   variant = "grid",
 }: QuickDateButtonsProps) => {
   const { i18n, t } = useTranslation();
-  const locale = localeMap[i18n.language];
+  const locale = dateLocales[i18n.language];
 
   const dayName = format(new Date(dates.nextWeek), "EEEE", { locale });
   const nextWeekLabel = t("next_week_label", { day: dayName });

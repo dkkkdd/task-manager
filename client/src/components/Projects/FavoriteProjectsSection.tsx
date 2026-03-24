@@ -1,10 +1,9 @@
 import { useState, useRef, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-
 import { ProjectsList } from "@/components/Projects/ProjectsList";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 
-export const FavoriteProjects = () => {
+const FavoriteProjects = () => {
   const { t } = useTranslation();
   const projects = useProjectsStore((s) => s.projects);
   const [showProjects, setShowProjects] = useState(true);
@@ -29,10 +28,12 @@ export const FavoriteProjects = () => {
   return (
     <div className="py-2">
       <div className="flex items-center justify-between mb-1 px-2">
-        <div className=" text-gray-500">{t("favorite_projects")}</div>
+        <div className=" text-gray-400">{t("favorite_projects")}</div>
 
         <div className="flex items-center">
           <div
+            role="button"
+            aria-label={"show or hide projects"}
             className="w-7 h-7 flex items-center justify-center rounded-md cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-[#82828241] group"
             onClick={() => setShowProjects((p) => !p)}
           >
@@ -55,3 +56,4 @@ export const FavoriteProjects = () => {
     </div>
   );
 };
+export default FavoriteProjects;

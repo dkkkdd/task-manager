@@ -1,7 +1,7 @@
-import { useCallback, useState } from "react";
+import { lazy, useCallback, useState } from "react";
 import { AddTaskBtn } from "../AddTaskBtn";
-import { ModalPortal } from "@/features/ModalPortal";
-import { TaskForm } from "../Tasks/TaskForm";
+import ModalPortal from "@/features/ModalPortal";
+const TaskForm = lazy(() => import("../Tasks/TaskForm/TaskForm"));
 
 const OpenForm = () => {
   const [openForm, setOpenForm] = useState(false);
@@ -12,7 +12,6 @@ const OpenForm = () => {
   const closeFormClick = useCallback(() => {
     setOpenForm(false);
   }, []);
-  if (!openForm) return;
   return (
     <>
       <div className="flex flex-col items-start justify-center pl-[5px] mb-2">

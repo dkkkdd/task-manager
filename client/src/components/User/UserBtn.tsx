@@ -12,7 +12,7 @@ export const UserBtn = ({ onClick }: { onClick: () => void }) => {
           {user?.userName?.charAt(0).toUpperCase() ||
             user?.email.charAt(0).toUpperCase()}
         </div>
-        <span className="text-[#4270d1] truncate">
+        <span className="text-blue-400 truncate">
           {user?.userName || user?.email.split("@")[0]}
         </span>
       </span>

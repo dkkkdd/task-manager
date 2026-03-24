@@ -10,10 +10,11 @@ async function apiRequest<T>(
 ): Promise<T> {
   const { body, signal, ...customConfig } = options;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
 
+  if (customConfig.method !== "DELETE" && customConfig.method !== "HEAD") {
+    headers["Content-Type"] = "application/json";
+  }
   const config: RequestInit = {
     ...customConfig,
     signal,
@@ -33,7 +34,6 @@ async function apiRequest<T>(
 
       if (response.status === 401) {
         console.warn("Unauthorized! Redirecting...");
-        // window.location.href = "/login";
       }
 
       throw new Error(errorMessage);
@@ -42,11 +42,15 @@ async function apiRequest<T>(
     if (response.status === 204) return {} as T;
 
     return await response.json();
-  } catch (error: any) {
-    if (error.name === "AbortError") {
-      return new Promise(() => {});
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        return new Promise(() => {});
+      }
+      throw error;
     }
-    throw error;
+
+    throw new Error("An unknown error occurred");
   }
 }
 

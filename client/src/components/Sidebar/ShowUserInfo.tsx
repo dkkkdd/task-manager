@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { UserBtn } from "../User/UserBtn";
-import { ModalPortal } from "@/features/ModalPortal";
-import { UserInfo } from "../User/UserInfo/UserInfo";
+import ModalPortal from "@/features/ModalPortal";
+const UserInfo = lazy(() => import("../User/UserInfo/UserInfo"));
 
 const ShowUserInfo = () => {
   const [showUserInfo, setShowUserInfo] = useState(false);

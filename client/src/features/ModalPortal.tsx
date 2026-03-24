@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-export const ModalPortal = ({ children }: { children: React.ReactNode }) => {
+const ModalPortal = ({ children }: { children: React.ReactNode }) => {
   const el = useMemo(() => document.createElement("div"), []);
 
   useEffect(() => {
@@ -15,3 +15,5 @@ export const ModalPortal = ({ children }: { children: React.ReactNode }) => {
 
   return createPortal(children, el);
 };
+
+export default ModalPortal;

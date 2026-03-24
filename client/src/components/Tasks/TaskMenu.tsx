@@ -35,7 +35,7 @@ interface GlobalMenuProps {
   onAddSubtask?: () => void;
 }
 
-export const GlobalDropdown = ({
+const GlobalDropdown = ({
   anchorEl,
   isOpen,
   onClose,
@@ -206,7 +206,8 @@ export const GlobalDropdown = ({
             <div className="flex mt-1 gap-2">
               {PRIORITY_OPTIONS.map((p) => {
                 return (
-                  <div
+                  <button
+                    aria-label={t("priority")}
                     onClick={() => {
                       updateTask(task.id, { priority: p.value });
                       onClose();
@@ -231,7 +232,7 @@ export const GlobalDropdown = ({
                       className="icon-flag text-lg"
                       style={{ color: p.color }}
                     ></span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -250,3 +251,5 @@ export const GlobalDropdown = ({
     </FloatingPortal>
   );
 };
+
+export default GlobalDropdown;

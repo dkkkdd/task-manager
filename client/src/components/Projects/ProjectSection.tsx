@@ -23,10 +23,12 @@ export function ProjectsSection() {
   return (
     <div className="py-2 z-999">
       <div className="flex items-center justify-between mb-1 px-2">
-        <div className="text-gray-500">{t("projects_count")}</div>
+        <div className="text-gray-400">{t("projects_count")}</div>
 
         <div className="flex items-center gap-1">
           <div
+            role="button"
+            aria-label={"show or hide projects"}
             className="w-7 h-7 flex items-center justify-center rounded-md cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-[#82828241] group"
             onClick={() => setShowProjects(!showProjects)}
           >

@@ -45,7 +45,7 @@ export const SPECIAL_COLORS: Record<SpecialLabel, DateMeta> = {
     icon: "icon-calendar-_5",
   },
   yesterday: {
-    color: "rgb(229, 57, 53)",
+    color: "rgb(255, 57, 54)",
     icon: "icon-yesterday",
   },
   weekend: {

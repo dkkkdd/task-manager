@@ -22,7 +22,7 @@ import { MobileDrawer } from "../../features/MobileDrawer";
 import { SharedDayPicker } from "./SharedDayPicker";
 import { QuickDateButtons } from "./Quickdatebuttons";
 import { TimeSelector } from "./Timeselector";
-import { localeMap } from "@/i18n";
+import { dateLocales } from "@/i18n";
 import { enUS } from "date-fns/locale";
 
 interface CalendarProps {
@@ -40,8 +40,10 @@ export const Calendar = (props: CalendarProps) => {
   const isMobile = useIsMobile();
   const { date, time, setDate, setTime, setIsCalOpen, children } = props;
   const { t, i18n } = useTranslation();
-  const langKey = i18n.language.split("-")[0];
-  const locale = localeMap[langKey] ?? enUS;
+  const locale = useMemo(() => {
+    return dateLocales[i18n.language] || enUS;
+  }, [i18n.language]);
+
   const [open, setOpen] = useState(false);
 
   const handleOpenChange = useCallback(
@@ -78,9 +80,9 @@ export const Calendar = (props: CalendarProps) => {
     dismiss,
   ]);
 
-  const timeOptions = useMemo(() => generateTimeOptions(STEP), [open]);
+  const timeOptions = useMemo(() => generateTimeOptions(STEP), []);
 
-  const dates = useMemo(() => generateDatePresets(), [i18n.language]);
+  const dates = useMemo(() => generateDatePresets(), []);
   const label = formatDateLabel(date, locale);
   const meta = dateColor(date);
 
@@ -129,6 +131,8 @@ export const Calendar = (props: CalendarProps) => {
     <>
       {children ? (
         <div
+          role="button"
+          aria-label="open calendar"
           ref={refs.setReference}
           {...getReferenceProps()}
           className="inline-flex"
@@ -137,6 +141,7 @@ export const Calendar = (props: CalendarProps) => {
         </div>
       ) : (
         <button
+          aria-label={"clear"}
           // eslint-disable-next-line react-hooks/refs
           ref={refs.setReference}
           {...getReferenceProps()}

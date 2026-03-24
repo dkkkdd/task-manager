@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Project } from "@/types/project";
 import { useTranslation } from "react-i18next";
-import { ModalPortal } from "@/features/ModalPortal";
+import ModalPortal from "@/features/ModalPortal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { ProjectForm } from "@/components/Projects/ProjectForm";
 import { ProjectMenu } from "@/components/Projects/Menu/ProjectMenu";

@@ -1,12 +1,11 @@
-import { memo, useState } from "react";
+import { lazy, memo, useState } from "react";
 import { AddTaskBtn } from "../AddTaskBtn";
-import { TaskForm } from "./TaskForm";
+const TaskForm = lazy(() => import("./TaskForm/TaskForm"));
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 export const AddTaskSection = memo(function AddTaskSection() {
   const isMobile = useIsMobile();
   const [openForm, setOpenForm] = useState(false);
-  if (isMobile) return;
 
   return (
     <>
@@ -18,6 +17,7 @@ export const AddTaskSection = memo(function AddTaskSection() {
           />
         </div>
       )}
+
       <TaskForm
         openForm={openForm}
         formMode="create"

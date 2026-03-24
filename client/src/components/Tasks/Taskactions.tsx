@@ -34,7 +34,11 @@ export const TaskActions = memo(function TaskActions({
   return (
     <div className="flex items-center">
       <button
-        onClick={onEdit}
+        aria-label={"edit"}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+        }}
         className={`
           opacity-0 group-hover:opacity-100 
           text-gray-800 dark:text-white icon-pencil 
@@ -46,6 +50,8 @@ export const TaskActions = memo(function TaskActions({
       />
 
       <div
+        role="button"
+        aria-label="open calendar"
         className={`${isSelectionMode ? "opacity-0 pointer-events-none" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -74,6 +80,7 @@ export const TaskActions = memo(function TaskActions({
       </div>
 
       <button
+        aria-label={"menu"}
         onClick={(e) => {
           onMenuClick(e);
           setIsCalOpen(false);

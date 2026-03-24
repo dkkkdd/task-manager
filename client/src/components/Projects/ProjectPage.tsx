@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { ProjectsSection } from "@/components/Projects/ProjectSection";
-import { FavoriteProjects } from "@/components/Projects/FavoriteProjectsSection";
-import { UserInfo } from "@/components/User/UserInfo/UserInfo";
-import { ModalPortal } from "@/features/ModalPortal";
+import FavoriteProjects from "@/components/Projects/FavoriteProjectsSection";
+const UserInfo = lazy(() => import("@/components/User/UserInfo/UserInfo"));
+import ModalPortal from "@/features/ModalPortal";
 import { UserBtn } from "@/components/User/UserBtn";
 
 export const ProjectPage = () => {

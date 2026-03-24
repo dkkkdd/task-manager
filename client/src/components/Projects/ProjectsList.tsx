@@ -1,7 +1,8 @@
-import { useCallback, useState } from "react";
+import { Suspense, lazy, useCallback, useState } from "react";
 import type { Project } from "@/types/project";
-import { ProjectItem } from "@/components/Projects/ProjectCard";
+const ProjectItem = lazy(() => import("@/components/Projects/ProjectCard"));
 import { ProjectMenuController } from "@/components/Projects/Menu/ProjectMenuController";
+import { ProjectSkeleton } from "./ProjectSkeleton";
 
 export function ProjectsList({ projects }: { projects: Project[] }) {
   const [menu, setMenu] = useState<{
@@ -17,12 +18,13 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
     <>
       <div className="flex flex-col items-start list-none m-0 p-0 w-full">
         {projects.map((p) => (
-          <ProjectItem
-            key={p.id}
-            project={p}
-            onOpenMenu={openMenu}
-            isMenuOpen={menu.projectId === p.id && !!menu.anchor}
-          />
+          <Suspense key={p.id} fallback={<ProjectSkeleton />}>
+            <ProjectItem
+              project={p}
+              onOpenMenu={openMenu}
+              isMenuOpen={menu.projectId === p.id && !!menu.anchor}
+            />
+          </Suspense>
         ))}
       </div>
 

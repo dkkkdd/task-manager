@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ModalPortal } from "@/features/ModalPortal";
+import ModalPortal from "@/features/ModalPortal";
 import { ProjectForm } from "./ProjectForm";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 import { useNavigate } from "react-router-dom";
@@ -35,12 +35,13 @@ const ShowProjectForm = () => {
   };
   return (
     <>
-      <div
+      <button
+        aria-label={"add new project"}
         className="w-7 h-7 flex items-center justify-center rounded-md cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-[#82828241] group"
         onClick={() => setShowForm(true)}
       >
         <span className="icon-icons8-close text-lg rotate-45 text-gray-400 group-hover:text-black/70 dark:group-hover:text-white"></span>
-      </div>
+      </button>
       <ModalPortal>
         <ProjectForm
           mode="create"

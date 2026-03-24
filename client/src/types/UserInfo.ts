@@ -3,8 +3,8 @@ export interface UserInfoBaseProps {
   setOpenConfirm: (value: boolean) => void;
   setOpenConfirmDelete: (value: boolean) => void;
   setOpenForm: (value: boolean) => void;
-  projectsCount: number;
-  undoneTasksCount: number;
+  projectsCount: number | undefined;
+  tasksCount: number | undefined;
   timeAgo: string;
   formattedDate: string;
   handleThemeChange: (theme: string | number | null) => void;

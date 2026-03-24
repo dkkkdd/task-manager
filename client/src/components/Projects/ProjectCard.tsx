@@ -9,7 +9,7 @@ interface ProjectCardProps {
   onOpenMenu: (el: HTMLDivElement, projectId: string) => void;
   isMenuOpen: boolean;
 }
-export const ProjectItem = memo(function ProjectItem({
+const ProjectItem = memo(function ProjectItem({
   project,
   onOpenMenu,
   isMenuOpen,
@@ -59,7 +59,7 @@ export const ProjectItem = memo(function ProjectItem({
           <span
             className="
               font-semibold md:font-normal
-              text-black dark:text-[#dedede]
+              text-black text-[14px] dark:text-[#dedede]
 
               break-words
               whitespace-normal
@@ -74,7 +74,9 @@ export const ProjectItem = memo(function ProjectItem({
 
       <div className="relative shrink-0 ml-2 flex items-start md:items-center">
         <span
+          role="button"
           ref={btnRef}
+          aria-label={"done"}
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -101,3 +103,5 @@ export const ProjectItem = memo(function ProjectItem({
     </Link>
   );
 });
+
+export default ProjectItem;

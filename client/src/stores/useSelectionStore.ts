@@ -23,7 +23,12 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
   toggleSelect: (id) =>
     set((state) => {
       const next = new Set(state.selectedIds);
-      next.has(id) ? next.delete(id) : next.add(id);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return { selectedIds: next };
     }),
 

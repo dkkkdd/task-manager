@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://task-managerr.pp.ua/sitemap.xml

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { DayPicker } from "react-day-picker";
 import { startOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { localeMap } from "@/i18n";
+import { dateLocales } from "@/i18n";
 import { enUS } from "date-fns/locale";
 
 import "react-day-picker/dist/style.css";
@@ -25,7 +25,7 @@ export const SharedDayPicker = ({
   const { i18n } = useTranslation();
 
   const currentLocale = useMemo(
-    () => localeMap[i18n.language] || enUS,
+    () => dateLocales[i18n.language] || enUS,
     [i18n.language],
   );
 
