@@ -21,6 +21,7 @@ export const getTasks = async (
     const userId = request.userId;
 
     const { projectId, mode, showDone } = request.query;
+    const isShowDone = showDone === "true";
 
     const where: Prisma.TaskWhereInput = { userId };
     const isFlatMode = ["today", "overdue", "completed"].includes(mode || "");
@@ -29,7 +30,7 @@ export const getTasks = async (
       where.parentId = null;
     }
 
-    if (!showDone && mode !== "completed") {
+    if (!isShowDone && mode !== "completed") {
       where.isDone = false;
     }
 
