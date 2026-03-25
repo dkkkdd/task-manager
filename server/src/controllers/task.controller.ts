@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 type TaskQuery = {
   projectId?: string;
   mode?: string;
+  showDone?: string;
 };
 
 type TaskParams = {
@@ -18,18 +19,27 @@ export const getTasks = async (
 ) => {
   try {
     const userId = request.userId;
-    const { projectId, mode } = request.query;
 
-    const where: Prisma.TaskWhereInput = { userId, parentId: null };
+    const { projectId, mode, showDone } = request.query;
+
+    const where: Prisma.TaskWhereInput = { userId };
+    const isFlatMode = ["today", "overdue", "completed"].includes(mode || "");
+
+    if (!isFlatMode) {
+      where.parentId = null;
+    }
+
+    if (!showDone && mode !== "completed") {
+      where.isDone = false;
+    }
 
     switch (mode) {
       case "inbox":
         where.projectId = null;
         break;
       case "project":
-        if (!projectId) {
+        if (!projectId)
           return reply.code(400).send({ error: "projectId required" });
-        }
         where.projectId = projectId;
         break;
       case "today":
@@ -37,6 +47,8 @@ export const getTasks = async (
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
           lte: new Date(new Date().setHours(23, 59, 59, 999)),
         };
+
+        where.isDone = false;
         break;
       case "overdue":
         where.deadline = { lt: new Date() };
@@ -45,15 +57,28 @@ export const getTasks = async (
       case "completed":
         where.isDone = true;
         break;
-      case "projects":
-        return [];
       default:
         where.projectId = null;
     }
+
+    const orderBy: Prisma.TaskOrderByWithRelationInput[] = [{ isDone: "asc" }];
+    if (isFlatMode) {
+      orderBy.push({ deadline: "asc" });
+    }
+    orderBy.push({ order: "asc" });
+
     const tasks = await prisma.task.findMany({
       where,
-      include: { subtasks: { orderBy: { order: "asc" } } },
-      orderBy: [{ isDone: "asc" }, { order: "asc" }],
+      ...(isFlatMode
+        ? {}
+        : {
+            include: {
+              subtasks: {
+                orderBy: [{ isDone: "asc" }, { order: "asc" }],
+              },
+            },
+          }),
+      orderBy,
     });
 
     return tasks;
