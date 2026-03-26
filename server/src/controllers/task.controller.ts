@@ -19,7 +19,6 @@ export const getTasks = async (
 ) => {
   try {
     const userId = request.userId;
-
     const { projectId, mode, showDone } = request.query;
     const isShowDone = showDone === "true";
 
@@ -44,16 +43,14 @@ export const getTasks = async (
         where.projectId = projectId;
         break;
       case "today":
-        where.deadline = {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          lte: new Date(new Date().setHours(23, 59, 59, 999)),
-        };
-
-        where.isDone = false;
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+        where.deadline = { gte: start, lte: end };
         break;
       case "overdue":
         where.deadline = { lt: new Date() };
-        where.isDone = false;
         break;
       case "completed":
         where.isDone = true;
@@ -62,11 +59,15 @@ export const getTasks = async (
         where.projectId = null;
     }
 
-    const orderBy: Prisma.TaskOrderByWithRelationInput[] = [{ isDone: "asc" }];
-    if (isFlatMode) {
-      orderBy.push({ deadline: "asc" });
+    const orderBy: Prisma.TaskOrderByWithRelationInput[] = [
+      { isDone: "asc" },
+      { order: "asc" },
+    ];
+
+    const subtaskWhere: Prisma.TaskWhereInput = { userId };
+    if (!isShowDone && mode !== "completed") {
+      subtaskWhere.isDone = false;
     }
-    orderBy.push({ order: "asc" });
 
     const tasks = await prisma.task.findMany({
       where,
@@ -75,11 +76,12 @@ export const getTasks = async (
         : {
             include: {
               subtasks: {
+                where: subtaskWhere,
                 orderBy: [{ isDone: "asc" }, { order: "asc" }],
               },
             },
           }),
-      orderBy,
+      orderBy: isFlatMode ? [{ deadline: "asc" }, ...orderBy] : orderBy,
     });
 
     return tasks;
