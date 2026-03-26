@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAuthActions, useAuthState } from "@/context/AuthProvider";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export const useUpdateUserForm = (onClose: () => void) => {
-  const { updateUserInfo } = useAuthActions();
-  const { user } = useAuthState();
+  const updateUserInfo = useAuthStore((s) => s.updateUserInfo);
+  const user = useAuthStore((s) => s.user);
 
   const [formData, setFormData] = useState({
     userName: user?.userName || "",

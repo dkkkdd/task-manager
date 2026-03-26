@@ -10,13 +10,13 @@ export const LANG_OPTIONS = [
 export const FILTER_OPTIONS = [
   {
     icon: "icon-list",
-    value: "all",
+    value: "true",
     label: "show_all_tasks",
     color: "#4270d1",
   },
   {
     icon: "icon-list2",
-    value: "active",
+    value: "false",
     label: "show_active_tasks",
     color: "#9d174d",
   },

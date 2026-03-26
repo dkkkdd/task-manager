@@ -2,18 +2,19 @@ import { useTranslation } from "react-i18next";
 
 interface TimeSelectorProps {
   time: string | null | undefined;
+  showClearButton: boolean;
   timeOptions: Array<{ value: string; label: string }>;
   onTimeChange: (time: string) => void;
   onClearTime: () => void;
-  showClearButton: boolean;
 }
 
 export const TimeSelector = ({
   time,
+  showClearButton = true,
   timeOptions,
+
   onTimeChange,
   onClearTime,
-  showClearButton = true,
 }: TimeSelectorProps) => {
   const { t } = useTranslation();
 
@@ -47,9 +48,7 @@ export const TimeSelector = ({
           outline-none
         "
       >
-        <option value="" disabled>
-          {t("set_time")}
-        </option>
+        <option value="">{t("set_time")}</option>
 
         {timeOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>

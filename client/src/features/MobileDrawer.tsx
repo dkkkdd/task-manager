@@ -6,24 +6,30 @@ export function MobileDrawer({
   onClose,
   children,
   drawerTitle,
-
+  isNested,
   drawerDescription,
 }: {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
   drawerTitle: string;
+  isNested: boolean;
   drawerDescription: string;
 }) {
   return (
-    <Drawer.Root open={open} onOpenChange={onClose} shouldScaleBackground>
+    <Drawer.Root
+      open={open}
+      onOpenChange={onClose}
+      shouldScaleBackground
+      nested={isNested}
+    >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/60 z-[998]" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/60 z-[1000]" />
 
         <Drawer.Content
           data-drawer-content
           className="
-            fixed inset-x-0 bottom-0 z-[999]
+            fixed inset-x-0 bottom-0 z-[1001]
             bg-white dark:bg-[#1f1f1f]
             rounded-t-[32px]
             max-h-[90dvh]

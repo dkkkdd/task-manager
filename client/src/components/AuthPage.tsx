@@ -7,8 +7,8 @@ import React, {
 } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuthActions } from "@/context/AuthProvider";
 import img from "@/assets/form.png";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface AuthPageProps {
   isLoginMode: boolean;
@@ -24,7 +24,9 @@ export const AuthPage = ({ isLoginMode }: AuthPageProps) => {
   } | null;
 
   const from = locationState?.from?.pathname || searchParams.get("from") || "/";
-  const { loginUser, registerUser } = useAuthActions();
+  const loginUser = useAuthStore((s) => s.loginUser);
+  const registerUser = useAuthStore((s) => s.registerUser);
+
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

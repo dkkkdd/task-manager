@@ -26,6 +26,10 @@ export const ProjectForm = ({
   const [color, setColor] = useState(
     initialProject?.color ?? OPTIONS[0]?.value ?? "#8c8c8c",
   );
+  function handleClear() {
+    setColor("#8c8c8c");
+    setName("");
+  }
 
   const { t } = useTranslation();
   // const inputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +40,7 @@ export const ProjectForm = ({
     try {
       await onSubmit({ title: name, color });
       onClose();
+      handleClear();
     } catch (error) {
       console.error("Failed to submit project:", error);
     }
@@ -46,6 +51,7 @@ export const ProjectForm = ({
   return (
     <>
       <MobileDrawer
+        isNested={false}
         open={open && isMobile}
         onClose={onClose}
         drawerDescription="Create or edit project"

@@ -30,8 +30,7 @@ interface GlobalMenuProps {
   onDelete: () => void;
   isCalOpen: boolean;
   setIsCalOpen: (val: boolean) => void;
-  updateDate: (newDate: Date | null) => void;
-  updateTime: (newTime: string | null) => void;
+  updateDate: (newDate: string | null) => void;
   onAddSubtask?: () => void;
 }
 
@@ -45,7 +44,6 @@ const GlobalDropdown = ({
   isCalOpen,
   setIsCalOpen,
   updateDate,
-  updateTime,
   onAddSubtask,
 }: GlobalMenuProps) => {
   const { refs, floatingStyles, context, isPositioned } = useFloating({
@@ -118,14 +116,9 @@ const GlobalDropdown = ({
               <QuickBtn
                 icon="icon-calendar-_2"
                 color="text-[#00c853]"
-                isActive={
-                  currentDeadlineStr
-                    ? isSameDay(currentDeadlineStr, dates.today)
-                    : false
-                }
                 onClick={() => {
-                  updateDate(dates.today);
-                  setIsCalOpen(false);
+                  const d = new Date(dates.today);
+                  updateDate(d.toISOString());
                   onClose();
                 }}
               />
@@ -138,8 +131,8 @@ const GlobalDropdown = ({
                     : false
                 }
                 onClick={() => {
-                  updateDate(dates.tomorrow);
-                  setIsCalOpen(false);
+                  const d = new Date(dates.tomorrow);
+                  updateDate(d.toISOString());
                   onClose();
                 }}
               />
@@ -152,8 +145,8 @@ const GlobalDropdown = ({
                     : false
                 }
                 onClick={() => {
-                  updateDate(dates.weekend);
-                  setIsCalOpen(false);
+                  const d = new Date(dates.weekend);
+                  updateDate(d.toISOString());
                   onClose();
                 }}
               />
@@ -166,8 +159,8 @@ const GlobalDropdown = ({
                     : false
                 }
                 onClick={() => {
-                  updateDate(dates.nextWeek);
-                  setIsCalOpen(false);
+                  const d = new Date(dates.nextWeek);
+                  updateDate(d.toISOString());
                   onClose();
                 }}
               />
@@ -177,18 +170,11 @@ const GlobalDropdown = ({
                   color="text-[#ff4444]"
                   onClick={() => {
                     updateDate(null);
-                    updateTime("");
                     onClose();
                   }}
                 />
               )}
-              <Calendar
-                date={task.deadline}
-                setDate={updateDate}
-                time={task.reminderAt || null}
-                setIsCalOpen={setIsCalOpen}
-                setTime={updateTime}
-              >
+              <Calendar date={task.deadline} setDate={updateDate}>
                 <span
                   onClick={() => setIsCalOpen(true)}
                   className={`${

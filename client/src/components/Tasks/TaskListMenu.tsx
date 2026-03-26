@@ -2,20 +2,16 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProjectMenuController } from "@/components/Projects/Menu/ProjectMenuController";
 import { MenuItem } from "@/components/Projects/Menu/MenuItem";
+import { useModeStore } from "@/stores/useModesStore";
 
 interface TaskListMenuProps {
   mode: string;
-  selectedProjectId: string | null;
-  onStartSelection: () => void;
 }
 
-export const TaskListMenu = ({
-  mode,
-  selectedProjectId,
-  onStartSelection,
-}: TaskListMenuProps) => {
+export const TaskListMenu = ({ mode }: TaskListMenuProps) => {
   const { t } = useTranslation();
   const btnRef = useRef<HTMLButtonElement | null>(null);
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
 
   const [menu, setMenu] = useState<{
     anchor: HTMLElement | null;
@@ -29,7 +25,7 @@ export const TaskListMenu = ({
   if (mode !== "project") return;
 
   return (
-    <div className="mx-auto max-w-[870px]">
+    <>
       <button
         ref={btnRef}
         onClick={(e) => {
@@ -38,7 +34,7 @@ export const TaskListMenu = ({
             openMenu(btnRef.current, selectedProjectId);
           }
         }}
-        className="fixed top-5 right-5 z-111 flex items-center justify-center
+        className="z-111 flex
              bg-transparent p-[0.3em] rounded-[8px]
              hover:bg-black/5 dark:hover:bg-[#82828241]
              text-black dark:text-white transition-colors"
@@ -57,7 +53,7 @@ export const TaskListMenu = ({
               {t("add_section")}
             </MenuItem>
 
-            {menu.anchor && (
+            {/* {menu.anchor && (
               <MenuItem
                 icon="icon-bookmarks"
                 onClick={() => {
@@ -67,12 +63,12 @@ export const TaskListMenu = ({
               >
                 {t("start_selection")}
               </MenuItem>
-            )}
+            )} */}
 
             <div className="border-t border-black/5 dark:border-white/5 my-1 mx-1" />
           </>
         }
       />
-    </div>
+    </>
   );
 };

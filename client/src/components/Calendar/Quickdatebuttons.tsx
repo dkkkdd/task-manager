@@ -10,9 +10,9 @@ interface QuickDateButtonsProps {
     weekend: Date;
     nextWeek: Date;
   };
-  currentDate: Date | null;
+  currentDate: string | null;
   onDateSelect: (date: Date | null) => void;
-  onTimeSelect: (time: string | null) => void;
+  handleClear: () => void;
   onClose?: () => void;
 
   variant?: "grid" | "vertical";
@@ -22,7 +22,7 @@ export const QuickDateButtons = ({
   dates,
   currentDate,
   onDateSelect,
-  onTimeSelect,
+  handleClear,
   onClose,
   variant = "grid",
 }: QuickDateButtonsProps) => {
@@ -88,7 +88,7 @@ export const QuickDateButtons = ({
           color="text-[#ff4444]"
           onClick={() => {
             onDateSelect(null);
-            onTimeSelect(null);
+            handleClear();
             onClose?.();
           }}
         />

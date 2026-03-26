@@ -29,7 +29,7 @@ export const ConfirmModal = ({
 
   return (
     <div
-      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-start pt-[15%] z-[1000] pointer-events-auto p-4"
+      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-start pt-[15%] z-[1200] pointer-events-auto p-4"
       onClick={onClose}
     >
       <div

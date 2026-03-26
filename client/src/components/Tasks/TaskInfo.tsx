@@ -183,9 +183,11 @@ const TaskInfo = ({
                   <span className="text-sm text-gray-800 dark:text-gray-300 font-medium">
                     {formattedDeadline}
                   </span>
-                  {task.reminderAt && (
-                    <span className="text-[10px] text-gray-400 dark:text-gray-600">
-                      {t("reminder_at", { time: task.reminderAt })}
+                  {task.deadline && (
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                      {t("reminder_at", {
+                        time: format(new Date(task.deadline), "HH:mm"),
+                      })}
                     </span>
                   )}
                 </div>

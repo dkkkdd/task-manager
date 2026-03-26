@@ -8,7 +8,7 @@ import { enUS } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 
 interface SharedDayPickerProps {
-  selected: Date | undefined;
+  selected: string | null;
   onSelect: (day: Date | undefined) => void;
   toDate?: Date;
   variant?: "desktop" | "mobile";
@@ -38,7 +38,7 @@ export const SharedDayPicker = ({
       locale={currentLocale}
       lang={i18n.language}
       mode="single"
-      selected={selected}
+      selected={selected ? new Date(selected) : undefined}
       onSelect={onSelect}
       showOutsideDays
       disabled={{ before: today }}

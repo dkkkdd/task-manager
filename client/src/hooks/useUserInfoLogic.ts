@@ -1,15 +1,15 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuthState } from "@/context/AuthProvider";
 import { applyTheme } from "@/utils/userSettings";
 import { formatUserDate } from "@/utils/userHelpers";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export type ModalType = "logout" | "delete" | "edit" | null;
 
 export const useUserInfoLogic = () => {
-  const { t, i18n } = useTranslation();
-  const { user } = useAuthState();
-  const projectsCount = user?._count.projects;
+  const { i18n } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
 
   const anchorRef = useRef<HTMLButtonElement>(null);
 
@@ -17,8 +17,9 @@ export const useUserInfoLogic = () => {
   const [currentTheme, setCurrentTheme] = useState(
     () => localStorage.getItem("theme") || "system",
   );
-
-  const tasksCount = user?._count.tasks;
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const { timeAgo, formattedDate } = useMemo(
     () =>
@@ -44,17 +45,12 @@ export const useUserInfoLogic = () => {
   };
 
   return {
-    user,
-    t,
-    i18n,
     anchorRef,
     activeModal,
     setActiveModal,
     currentTheme,
     handleThemeChange,
     handleLangChange,
-    projectsCount,
-    tasksCount,
     timeAgo,
     formattedDate,
   };

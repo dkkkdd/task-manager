@@ -1,6 +1,5 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 const RenderTaskItem = lazy(() => import("../RenderTaskCard"));
-import { TaskCardLoader } from "../TaskCardLoader";
 import { useTranslation } from "react-i18next";
 import type { Task } from "@/types/tasks";
 
@@ -19,9 +18,7 @@ export const TaskFormSubtasks = ({ initiaTask, onStartAddSubtask }: Props) => {
           <ul className="flex flex-col">
             {initiaTask.subtasks.map((sub) => (
               <li key={sub.id} className="relative flex items-center">
-                <Suspense fallback={<TaskCardLoader />}>
-                  <RenderTaskItem task={sub} />
-                </Suspense>
+                <RenderTaskItem task={sub} />
               </li>
             ))}
           </ul>

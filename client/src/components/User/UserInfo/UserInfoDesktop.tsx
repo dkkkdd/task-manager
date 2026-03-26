@@ -1,4 +1,4 @@
-import type { UserInfoProps } from "@/types/UserInfo";
+import type { UserInfoProps } from "@/types/userInfo";
 import { UserInfoBase } from "@/components/User/UserInfo/UserInfoBase";
 
 export const UserInfoDesktop = (props: UserInfoProps) => {
@@ -31,8 +31,6 @@ export const UserInfoDesktop = (props: UserInfoProps) => {
           setOpenConfirm={props.setOpenConfirm}
           setOpenConfirmDelete={props.setOpenConfirmDelete}
           setOpenForm={props.setOpenForm}
-          projectsCount={props.projectsCount}
-          tasksCount={props.tasksCount}
           timeAgo={props.timeAgo}
           formattedDate={props.formattedDate}
           handleThemeChange={props.handleThemeChange}

@@ -3,7 +3,6 @@ import { Fragment, useCallback, useMemo, useState, lazy } from "react";
 
 import TaskCard from "./TaskCard";
 const TaskForm = lazy(() => import("../Tasks/TaskForm/TaskForm"));
-import { useTaskListLogic } from "@/hooks/useTaskList";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useTaskListStore } from "@/stores/useTaskListStore";
 import { useTasksStore } from "@/stores/useTasksStore";
@@ -13,31 +12,36 @@ const ModalPortal = lazy(() => import("@/features/ModalPortal"));
 const TaskInfo = lazy(() => import("@/components/Tasks/TaskInfo"));
 const GlobalDropdown = lazy(() => import("@/components/Tasks/TaskMenu"));
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
+import { useSelectionStore } from "@/stores/useSelectionStore";
 
 const RenderTaskItem = ({ task }: { task: Task }) => {
   const isMobile = useIsMobile();
   const mode = useModeStore((s) => s.mode);
-  const tasks = useTasksStore((s) => s.tasks);
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
+  const tasksCache = useTasksStore((s) => s.tasksCache);
+  const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
+  const tasks = tasksCache[cacheKey] || [];
   const projects = useProjectsStore((s) => s.projects);
+  const editingTaskId = useTaskListStore((s) => s.editingTaskId);
+  const expandedTasks = useTaskListStore((s) => s.expandedTasks);
+  const activeParentId = useTaskListStore((s) => s.activeParentId);
+  const selectionMode = useSelectionStore((s) => s.selectionMode);
+  const selectedIds = useSelectionStore((s) => s.selectedIds);
+
+  const toggleSelect = useSelectionStore((s) => s.toggleSelect);
+
   const setMode = useModeStore((s) => s.setMode);
   const openProject = useModeStore((s) => s.openProject);
-
   const updateTask = useTasksStore((s) => s.updateTask);
   const updateDone = useTasksStore((s) => s.updateDone);
-
   const handleStartAddSubtask = useTaskListStore(
     (s) => s.handleStartAddSubtask,
   );
   const handleDeleteRequest = useTaskListStore((s) => s.handleDeleteRequest);
   const toggleTask = useTaskListStore((s) => s.toggleTask);
-  const editingTaskId = useTaskListStore((s) => s.editingTaskId);
-  const expandedTasks = useTaskListStore((s) => s.expandedTasks);
-  const activeParentId = useTaskListStore((s) => s.activeParentId);
   const setActiveParentId = useTaskListStore((s) => s.setActiveParentId);
   const handleStartEditing = useTaskListStore((s) => s.handleStartEditing);
   const setEditingTaskId = useTaskListStore((s) => s.setEditingTaskId);
-
-  const { state } = useTaskListLogic();
 
   const [openTaskInfo, setOpenTaskInfo] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -58,7 +62,7 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
   );
 
   const handleDate = useCallback(
-    (newDate: Date | null) => {
+    (newDate: string | null) => {
       updateTask(task.id, { deadline: newDate });
     },
     [task.id, updateTask],
@@ -66,7 +70,7 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
 
   const handleTime = useCallback(
     (newTime: string | null) => {
-      updateTask(task.id, { reminderAt: newTime });
+      updateTask(task.id, { deadline: newTime });
     },
     [task.id, updateTask],
   );
@@ -82,9 +86,9 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
 
   const handleCardClick = useCallback(
     (e: React.MouseEvent) => {
-      if (state.selection.selectionMode) {
+      if (selectionMode) {
         e.stopPropagation();
-        state.selection.toggleSelect(task.id);
+        toggleSelect(task.id);
         return;
       }
       if (isMobile) {
@@ -93,7 +97,7 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
       }
       setOpenTaskInfo(true);
     },
-    [state.selection, isMobile, handleStartEditing, task.id],
+    [isMobile, handleStartEditing, task.id, selectionMode],
   );
 
   const handleProjectChange = (prodId: string | null) => {
@@ -101,7 +105,6 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
     else openProject(prodId);
   };
 
-  const currentDeadlineStr = task.deadline ? new Date(task.deadline) : null;
   const projectOfTask = projects.find((p) => p.id === task.projectId) || null;
   const parentTask = tasks.find((t: Task) => t.id === task.parentId);
 
@@ -110,32 +113,23 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
     return { bg: option?.bg, color: option?.color };
   }, [task.priority]);
 
-  const subtasksStats = useMemo(
-    () => ({
-      subCount: task.subtasks?.length || 0,
-      subDone: task.subtasks?.filter((t) => t.isDone).length || 0,
-    }),
-    [task.subtasks],
-  );
-
   const ui = {
     mode,
     projectOfTask,
     isMobile,
-    selectionMode: state.selection.selectionMode,
-    selected: state.selection.selectedIds.has(task.id),
+    selectionMode: selectionMode,
+    selected: selectedIds.has(task.id),
     showSubTasks: isExpanded,
     isMenuOpen,
     isCalOpen,
-    currentDeadlineStr,
+    deadline: task.deadline,
     priorityStyle,
-    subtasksStats,
   };
 
   const handlers = {
     onCardClick: handleCardClick,
     onToggle: handleToggle,
-    onSelect: () => state.selection.toggleSelect(task.id),
+    onSelect: () => toggleSelect(task.id),
     onDateUpdate: handleDate,
     onTimeUpdate: handleTime,
     onMenuClick: handleMenuClick,
@@ -150,7 +144,7 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
       : () => handleStartAddSubtask(task.id),
   };
 
-  if (editingTaskId === task.id) {
+  if (editingTaskId === task.id && !isMobile) {
     return (
       <TaskForm
         openForm
@@ -194,12 +188,21 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
         </ModalPortal>
       )}
 
+      {editingTaskId === task.id && (
+        <TaskForm
+          openForm
+          initiaTask={task}
+          formMode="edit"
+          onClose={() => setEditingTaskId(null)}
+          onStartAddSubtask={handleStartAddSubtask}
+        />
+      )}
+
       {isMenuOpen && anchorEl && (
         <GlobalDropdown
           isCalOpen={isCalOpen}
           setIsCalOpen={setIsCalOpen}
           updateDate={handleDate}
-          updateTime={handleTime}
           task={task}
           isOpen={isMenuOpen}
           anchorEl={anchorEl}

@@ -1,7 +1,8 @@
 import { useIsMobile } from "@/hooks/useIsMobile";
 import TaskFormMobile from "./TaskFormMobile";
-import TaskFormDesktop from "./TaskFormDesktop";
 import type { Task } from "@/types/tasks";
+
+import { TaskFormDesktop } from "./TaskFormDesktop";
 
 export interface TaskFormProps {
   formMode: "create" | "edit";
@@ -14,6 +15,7 @@ export interface TaskFormProps {
 
 const TaskForm = (props: TaskFormProps) => {
   const isMobile = useIsMobile();
+
   return isMobile ? (
     <TaskFormMobile {...props} />
   ) : (

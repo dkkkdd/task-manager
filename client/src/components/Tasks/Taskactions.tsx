@@ -2,16 +2,14 @@ import { memo } from "react";
 import { Calendar } from "@/components/Calendar/Calendar";
 
 interface TaskActionsProps {
-  isSelectionMode?: boolean;
+  isSelectionMode: boolean;
   isMobile?: boolean;
   isMenuOpen: boolean;
   isCalOpen: boolean;
-  currentDeadlineStr: Date | null;
-  reminderAt?: string | null;
+  currentDeadlineStr: string | null;
   onEdit: () => void;
   onMenuClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onDateUpdate: (date: Date | null) => void;
-  onTimeUpdate: (time: string | null) => void;
+  onDateUpdate: (date: string | null) => void;
   setIsCalOpen: (val: boolean) => void;
 }
 
@@ -21,12 +19,11 @@ export const TaskActions = memo(function TaskActions({
   isMenuOpen,
   isCalOpen,
   currentDeadlineStr,
-  reminderAt,
 
   onEdit,
   onMenuClick,
   onDateUpdate,
-  onTimeUpdate,
+
   setIsCalOpen,
 }: TaskActionsProps) {
   if (isMobile) return null;
@@ -44,7 +41,7 @@ export const TaskActions = memo(function TaskActions({
           text-gray-800 dark:text-white icon-pencil 
           p-2 rounded-md cursor-pointer 
           hover:bg-black/5 dark:hover:bg-[#82828241]
-          transition-opacity
+          
           ${isSelectionMode ? "!opacity-0 pointer-events-none" : ""}
         `}
       />
@@ -55,13 +52,7 @@ export const TaskActions = memo(function TaskActions({
         className={`${isSelectionMode ? "opacity-0 pointer-events-none" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <Calendar
-          date={currentDeadlineStr}
-          setDate={onDateUpdate}
-          time={reminderAt || null}
-          setIsCalOpen={setIsCalOpen}
-          setTime={onTimeUpdate}
-        >
+        <Calendar date={currentDeadlineStr} setDate={onDateUpdate}>
           <button
             onClick={() => setIsCalOpen(true)}
             className={`
@@ -73,7 +64,7 @@ export const TaskActions = memo(function TaskActions({
               text-gray-800 dark:text-white icon-calendar-_1 
               p-2 rounded-md cursor-pointer 
               hover:bg-black/5 dark:hover:bg-[#82828241]
-              transition-all
+              
             `}
           />
         </Calendar>
@@ -96,7 +87,7 @@ export const TaskActions = memo(function TaskActions({
           icon-three-dots-punctuation-sign-svgrepo-com 
           p-2 rounded-md cursor-pointer 
           hover:bg-black/5 dark:hover:bg-[#82828241]
-          transition-all
+         
         `}
       />
     </div>

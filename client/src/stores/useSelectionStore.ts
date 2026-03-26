@@ -4,6 +4,7 @@ import { useTasksStore } from "./useTasksStore";
 interface SelectionStore {
   selectionMode: boolean;
   selectedIds: Set<string>;
+  total: number;
 
   startSelection: () => void;
   toggleSelect: (id: string) => void;
@@ -12,79 +13,121 @@ interface SelectionStore {
 
   bulkComplete: () => Promise<void>;
   bulkDelete: () => Promise<void>;
+  bulkProjectChange: (projectId: string | null) => Promise<void>;
+  bulkUpdateDeadline: (
+    date: string | null,
+    time: string | null,
+  ) => Promise<void>;
+  bulkSetPriority: (priority: number) => Promise<void>;
 }
 
 export const useSelectionStore = create<SelectionStore>((set, get) => ({
   selectionMode: false,
-  selectedIds: new Set(),
+  selectedIds: new Set<string>(),
+  total: 0,
 
-  startSelection: () => set({ selectionMode: true }),
+  startSelection: () =>
+    set((state) => {
+      if (state.selectionMode) {
+        return { selectionMode: false, selectedIds: new Set() };
+      }
+      return { selectionMode: true };
+    }),
 
   toggleSelect: (id) =>
     set((state) => {
       const next = new Set(state.selectedIds);
-
       if (next.has(id)) {
         next.delete(id);
       } else {
         next.add(id);
       }
-      return { selectedIds: next };
+      return { selectedIds: next, total: next.size };
     }),
 
   toggleSelectAll: (allIds) =>
-    set((state) => ({
-      selectedIds:
-        state.selectedIds.size === allIds.length ? new Set() : new Set(allIds),
-    })),
+    set((state) => {
+      const isAllSelected = state.selectedIds.size === allIds.length;
+      return {
+        selectedIds: isAllSelected ? new Set() : new Set(allIds),
+      };
+    }),
 
   clearSelection: () => set({ selectedIds: new Set(), selectionMode: false }),
 
   bulkComplete: async () => {
     const { selectedIds, clearSelection } = get();
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
     const updateTask = useTasksStore.getState().updateTask;
-    await Promise.all(
-      Array.from(selectedIds).map((id) => updateTask(id, { isDone: true })),
-    );
     clearSelection();
+    await Promise.all(ids.map((id) => updateTask(id, { isDone: true })));
   },
 
   bulkDelete: async () => {
     const { selectedIds, clearSelection } = get();
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
     const deleteTask = useTasksStore.getState().deleteTask;
-    await Promise.all(Array.from(selectedIds).map((id) => deleteTask(id)));
     clearSelection();
+    await Promise.all(ids.map((id) => deleteTask(id)));
   },
 
-  bulkUpdateDeadline: async (date: Date | null, time: string | null) => {
+  bulkUpdateDeadline: async (
+    dateStr: string | null,
+    timeStr: string | null,
+  ) => {
     const { selectedIds, clearSelection } = get();
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
     const updateTask = useTasksStore.getState().updateTask;
 
-    let finalDeadline: Date | null = null;
-    if (date) {
-      finalDeadline = new Date(date);
-      if (time) {
-        const [h, m] = time.split(":").map(Number);
-        finalDeadline.setHours(h, m, 0, 0);
-      } else {
-        finalDeadline.setHours(23, 59, 59, 999);
-      }
-    }
+    let finalDeadline: string | null = null;
 
-    await Promise.all(
-      Array.from(selectedIds).map((id) =>
-        updateTask(id, { deadline: finalDeadline, reminderAt: time }),
-      ),
-    );
+    if (dateStr) {
+      const dateObj = new Date(dateStr);
+      if (timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        dateObj.setHours(hours, minutes, 0, 0);
+      } else {
+        dateObj.setHours(23, 59, 59, 999);
+      }
+      finalDeadline = dateObj.toISOString();
+    }
     clearSelection();
+    await Promise.all(
+      ids.map((id) => updateTask(id, { deadline: finalDeadline })),
+    );
   },
 
   bulkSetPriority: async (priority: number) => {
     const { selectedIds, clearSelection } = get();
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
     const updateTask = useTasksStore.getState().updateTask;
-    await Promise.all(
-      Array.from(selectedIds).map((id) => updateTask(id, { priority })),
-    );
     clearSelection();
+    await Promise.all(ids.map((id) => updateTask(id, { priority })));
+  },
+
+  bulkProjectChange: async (projectId: string | null) => {
+    const { selectedIds, clearSelection } = get();
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    const updateTask = useTasksStore.getState().updateTask;
+    clearSelection();
+    await Promise.all(
+      ids.map((id) =>
+        updateTask(id, {
+          projectId,
+          parentId: null,
+          sectionId: null,
+        }),
+      ),
+    );
   },
 }));

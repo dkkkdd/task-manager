@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { useTaskListStore } from "./useTaskListStore";
 import type { TaskMode } from "@/types/navigation";
+import { useSelectionStore } from "./useSelectionStore";
+
 function getModeFromPath(): {
   mode: TaskMode;
   selectedProjectId: string | null;
@@ -23,16 +25,16 @@ interface ModeStore {
   mode: TaskMode;
   selectedProjectId: string | null;
 
-  showAll: boolean;
+  showDone: boolean;
   openProject: (id: string) => void;
   setMode: (mode: TaskMode, projectId?: string) => void;
   setSelectedProjectId: (id: string | null) => void;
-  setShowAll: (val: boolean) => void;
+  setShowDone: (val: boolean) => void;
 }
 
 export const useModeStore = create<ModeStore>((set, get) => ({
   ...getModeFromPath(),
-  showAll: localStorage.getItem("showAll") === "true",
+  showDone: localStorage.getItem("showDone") === "true",
 
   setMode: (newMode, projectId) => {
     const current = get();
@@ -46,6 +48,8 @@ export const useModeStore = create<ModeStore>((set, get) => ({
     }
 
     useTaskListStore.getState().resetForms();
+    useSelectionStore.getState().clearSelection();
+
     set({ mode: newMode, selectedProjectId: nextProjectId });
   },
 
@@ -66,8 +70,18 @@ export const useModeStore = create<ModeStore>((set, get) => ({
     set({ selectedProjectId: id });
   },
 
-  setShowAll: (val) => {
-    localStorage.setItem("showAll", String(val));
-    set({ showAll: val });
+  setShowDone: (val) => {
+    localStorage.setItem("showDone", String(val));
+    //   if (!val) {
+
+    //   useTaskListStore.setState((state) => {
+    //     const newCache = { ...state.tasksCache };
+    //     Object.keys(newCache).forEach(key => {
+    //       newCache[key] = newCache[key].filter(t => !t.completed);
+    //     });
+    //     return { tasksCache: newCache };
+    //   });
+    // }
+    set({ showDone: val });
   },
 }));

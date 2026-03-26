@@ -10,7 +10,17 @@
 :root {
   --bg-dark: #1f1f1f;
 }
-
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.animate-progress-line {
+  animation: progress 1.5s infinite linear;
+}
 html {
   background-color: var(--bg-dark);
 }

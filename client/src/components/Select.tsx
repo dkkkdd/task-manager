@@ -139,7 +139,7 @@ export function Select({
           focus:outline-none relative w-full min-h-[38px]
           flex items-center justify-between gap-2 p-2 pr-7
           rounded cursor-pointer box-border 
-          bg-transparent text-gray-700
+          bg-transparent text-gray-700 
           hover:bg-black/5 dark:hover:bg-[#333] m-0
           ${
             border !== false
@@ -173,7 +173,7 @@ export function Select({
           ) : null}
 
           {!mobile && (
-            <span className="truncate text-gray-700 dark:text-white">
+            <span className="truncate !text-[0.9em] text-gray-700 dark:text-white">
               {current ? t(current.label) : placeholder}
             </span>
           )}

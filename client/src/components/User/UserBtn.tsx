@@ -1,7 +1,7 @@
-import { useAuthState } from "@/context/AuthProvider";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export const UserBtn = ({ onClick }: { onClick: () => void }) => {
-  const { user } = useAuthState();
+  const user = useAuthStore((s) => s.user);
   return (
     <div className="mb-6 font-semibold">
       <span

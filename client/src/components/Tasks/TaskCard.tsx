@@ -6,7 +6,6 @@ import { TaskCheckbox } from "@/components/Tasks/TaskCheckbox";
 import { TaskMetadata } from "@/components/Tasks/Taskmetadata";
 import { TaskActions } from "@/components/Tasks/Taskactions";
 
-import { formatDateLabel, dateColor } from "@/utils/dateFormatters";
 import type { Project } from "@/types/project";
 
 interface TaskCardProps {
@@ -20,16 +19,14 @@ interface TaskCardProps {
     showSubTasks: boolean;
     isMenuOpen: boolean;
     isCalOpen: boolean;
-    currentDeadlineStr: Date | null;
+    deadline: string | null;
     priorityStyle: { bg?: string; color?: string };
-    subtasksStats: { subCount: number; subDone: number };
   };
   handlers: {
     onCardClick: (e: React.MouseEvent) => void;
     onToggle: (e: React.MouseEvent) => void;
     onSelect: () => void;
-    onDateUpdate: (date: Date | null) => void;
-    onTimeUpdate: (time: string | null) => void;
+    onDateUpdate: (date: string | null) => void;
     onMenuClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
     onEdit: () => void;
     setIsCalOpen: (val: boolean) => void;
@@ -48,9 +45,8 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
     showSubTasks,
     isMenuOpen,
     isCalOpen,
-    currentDeadlineStr,
+    deadline,
     priorityStyle,
-    subtasksStats,
   } = ui;
 
   const {
@@ -58,7 +54,6 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
     onToggle,
     onSelect,
     onDateUpdate,
-    onTimeUpdate,
     onMenuClick,
     onEdit,
     setIsCalOpen,
@@ -71,19 +66,19 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
       <div
         onClick={onCardClick}
         className={`
-          ${selected ? "!text-[#9d174d]" : "text-black dark:text-white"}
+          ${selected ? "dark:bg-[#262626] bg-black/10 rounded-lg" : ""}
           group flex items-center w-full transition-colors relative cursor-pointer
           ${task.isDone ? "opacity-80 text-gray-400 dark:text-gray-500" : ""}
         `}
       >
         <SubtaskToggle
-          subCount={subtasksStats.subCount}
+          subCount={task.subtasks?.length || null}
           showSubTasks={showSubTasks}
           mode={mode}
           onToggle={setShowSubTasks}
         />
 
-        <div className="flex items-center gap-2 text-[16px] md:text-[15px] flex-1 py-0.3">
+        <div className="flex items-center gap-2 text-[16px] md:text-[15px] flex-1">
           <TaskCheckbox
             isDone={task.isDone}
             isSelectionMode={!!selectionMode}
@@ -94,10 +89,10 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
             onSelect={onSelect}
           />
 
-          <div className="flex items-center justify-between flex-1 border-b border-black/10 dark:border-[#88888846] py-[0.4rem] pl-1">
-            <div className="flex flex-col flex-wrap min-w-0 flex-1">
+          <div className="flex items-center justify-between flex-1 border-b border-black/10 dark:border-[#88888846] py-3 md:py-[0.4rem] pl-1">
+            <div className="flex sm:gap-[0.1em] flex-col flex-wrap min-w-0 flex-1">
               <div
-                className={`text-[14px] ${
+                className={`md:text-[14px] ${
                   task.isDone ? "line-through text-gray-400" : ""
                 } font-normal leading-tight`}
               >
@@ -111,19 +106,11 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
               )}
 
               <TaskMetadata
-                deadline={task.deadline}
-                reminderAt={task.reminderAt}
-                completedAt={task.completedAt}
-                subCount={subtasksStats.subCount}
-                subDone={subtasksStats.subDone}
                 projectOfTask={projectOfTask}
                 mode={mode}
-                isDone={task.isDone}
+                task={task}
                 isSelectionMode={selectionMode}
-                dateColor={dateColor}
-                formatDateLabel={formatDateLabel}
                 onDateUpdate={onDateUpdate}
-                onTimeUpdate={onTimeUpdate}
                 onProjectClick={onProjectClick}
               />
             </div>
@@ -133,12 +120,10 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
               isMobile={isMobile}
               isMenuOpen={isMenuOpen}
               isCalOpen={isCalOpen}
-              currentDeadlineStr={currentDeadlineStr}
-              reminderAt={task.reminderAt}
+              currentDeadlineStr={deadline}
               onEdit={onEdit}
               onMenuClick={onMenuClick}
               onDateUpdate={onDateUpdate}
-              onTimeUpdate={onTimeUpdate}
               setIsCalOpen={setIsCalOpen}
             />
           </div>

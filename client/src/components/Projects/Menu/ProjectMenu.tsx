@@ -13,10 +13,7 @@ import {
 } from "@floating-ui/react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Select } from "@/components/Select";
 import { MenuItem } from "@/components/Projects/Menu/MenuItem";
-import { FILTER_OPTIONS } from "@/utils/userSettings";
-import { useModeStore } from "@/stores/useModesStore";
 
 interface ProjectMenuProps {
   anchorEl: HTMLElement | null;
@@ -40,8 +37,6 @@ export function ProjectMenu({
 
   additionalItems,
 }: ProjectMenuProps) {
-  const showAll = useModeStore((s) => s.showAll);
-  const setShowAll = useModeStore((s) => s.setShowAll);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const listRef = useRef<Array<HTMLElement | null>>([]);
   const { t } = useTranslation();
@@ -69,7 +64,7 @@ export function ProjectMenu({
     listRef,
     activeIndex,
     onNavigate: setActiveIndex,
-    loop: true, // зацикливание стрелок
+    loop: true,
   });
 
   const { getFloatingProps, getItemProps } = useInteractions([
@@ -134,21 +129,6 @@ export function ProjectMenu({
             {isFavorite ? t("remove_from_favorites") : t("add_to_favorites")}
           </MenuItem>
 
-          <div className="flex justify-center w-full">
-            <Select
-              position="right-start"
-              border={false}
-              symbol="icon-flag"
-              value={showAll ? "all" : "active"}
-              options={FILTER_OPTIONS}
-              onChange={(val) => {
-                const isAll = val === "all";
-                setShowAll(isAll);
-                closeMenu();
-              }}
-            />
-          </div>
-
           <MenuItem
             ref={(el) => {
               listRef.current[2] = el;
@@ -175,6 +155,7 @@ export function ProjectMenu({
             {...getItemProps({
               onClick: () => {
                 onDelete();
+
                 closeMenu();
               },
             })}

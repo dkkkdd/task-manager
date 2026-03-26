@@ -1,71 +1,67 @@
-import { useTranslation } from "react-i18next";
-import type { TaskMode } from "@/types/navigation";
 import { useModeStore } from "@/stores/useModesStore";
+import type { TaskMode } from "@/types/navigation";
+import { GET_NAV_ITEMS } from "@/utils/navigation";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-export const SidebarNavigation = () => {
+interface NavProps {
+  variant?: "sidebar" | "mobile";
+  onItemClick?: () => void;
+  children?: React.ReactNode;
+}
+
+export const SidebarNavigation = ({
+  variant = "sidebar",
+  onItemClick,
+  children,
+}: NavProps) => {
   const { t } = useTranslation();
   const mode = useModeStore((s) => s.mode);
-
   const setMode = useModeStore((s) => s.setMode);
+  const items = GET_NAV_ITEMS(t);
+  const isMobile = variant === "mobile";
 
-  const NAV_ITEMS = [
-    { id: "inbox", label: t("inbox"), icon: "icon-inbox" },
-    { id: "today", label: t("today"), icon: "icon-calendar-_1" },
-    { id: "completed", label: t("completed"), icon: "icon-checkmark" },
-    { id: "overdue", label: t("overdue"), icon: "icon-history" },
-  ] as const;
+  return (
+    <div
+      className={
+        isMobile
+          ? "flex h-14 w-full items-center justify-around"
+          : "flex flex-col gap-1"
+      }
+    >
+      {items.map((nav) => {
+        const isActive = mode === nav.id;
+        return (
+          <Link
+            key={nav.id}
+            to={nav.path}
+            onClick={() => {
+              setMode(nav.id as TaskMode);
+              onItemClick?.();
+            }}
+            className={`
+              relative flex items-center cursor-pointer transition-all
+              ${isMobile ? "flex-1 justify-center h-full" : "gap-3 p-2 w-full rounded-lg text-[14px]"}
+              ${
+                isActive
+                  ? "text-[#9d174d] dark:text-white bg-[#9d174d]/10"
+                  : "text-gray-700 dark:text-white/70 hover:bg-black/5 dark:hover:bg-[#363636]"
+              }
+            `}
+          >
+            <span
+              className={`${nav.icon} ${isMobile ? "text-xl" : "text-base"}`}
+            />
+            {!isMobile && <span>{nav.label}</span>}
 
-  return NAV_ITEMS.map((nav) => {
-    return (
-      <Link
-        key={nav.id}
-        onClick={() => setMode(nav.id as TaskMode)}
-        to={`/${nav.id}`}
-        className={`text-[14px] ${mode === nav.id ? "bg-[#9d174d]/15 text-[#9d174d] dark:text-white" : "text-gray-700 dark:text-white/70"} flex items-center gap-3 p-2 cursor-pointer hover:bg-black/5 dark:hover:bg-[#363636] w-full rounded-lg m-0`}
-      >
-        <span className={nav.icon} />
-        {nav.label}
-      </Link>
-    );
-  });
+            {isMobile && isActive && (
+              <span className="absolute inset-x-1 inset-y-1.5 bg-[#9d174d]/15 rounded-xl -z-10" />
+            )}
+          </Link>
+        );
+      })}
+
+      {isMobile && children}
+    </div>
+  );
 };
-
-// import { useTranslation } from "react-i18next";
-
-// import { useModeStore } from "@/stores/useModesStore";
-// import { Link } from "react-router-dom";
-// export type TaskMode =
-//   | "project"
-//   | "inbox"
-//   | "today"
-//   | "completed"
-//   | "overdue"
-//   | "projects";
-// export const SidebarNavigation = () => {
-//   const { t } = useTranslation();
-//   const mode = useModeStore((s) => s.mode);
-
-//   const setMode = useModeStore((s) => s.setMode);
-
-//   const NAV_ITEMS = [
-//     { id: "inbox", label: t("inbox"), icon: "icon-inbox" },
-//     { id: "today", label: t("today"), icon: "icon-calendar-_1" },
-//     { id: "completed", label: t("completed"), icon: "icon-checkmark" },
-//     { id: "overdue", label: t("overdue"), icon: "icon-history" },
-//   ] as const;
-
-//   return NAV_ITEMS.map((nav) => {
-//     return (
-//       <Link
-//         key={nav.id}
-//         onClick={() => setMode(nav.id as TaskMode)}
-//         to={`/${nav.id}`}
-//         className={`text-[14px] ${mode === nav.id ? "bg-[#9d174d]/15 text-[#9d174d] dark:text-white" : "text-gray-700 dark:text-white/70"} flex items-center gap-3 p-2 cursor-pointer hover:bg-black/5 dark:hover:bg-[#363636] w-full rounded-lg m-0`}
-//       >
-//         <span className={nav.icon} />
-//         {nav.label}
-//       </Link>
-//     );
-//   });
-// };

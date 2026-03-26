@@ -6,6 +6,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { ProjectForm } from "@/components/Projects/ProjectForm";
 import { ProjectMenu } from "@/components/Projects/Menu/ProjectMenu";
 import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useModeStore } from "@/stores/useModesStore";
 import { useNavigate } from "react-router-dom";
 
 type MenuState = {
@@ -33,6 +34,7 @@ export function ProjectMenuController({
   closeMenu: () => void;
 }) {
   const navigate = useNavigate();
+  const setMode = useModeStore((s) => s.setMode);
   const projects = useProjectsStore((s) => s.projects);
   const toggleFavorite = useProjectsStore((s) => s.toggleFavorite);
   const deleteProject = useProjectsStore((s) => s.deleteProject);
@@ -80,7 +82,8 @@ export function ProjectMenuController({
             message={t("delete_project_confirm", { title: project.title })}
             onConfirm={() => {
               deleteProject(project.id);
-              navigate("/");
+              setMode("inbox");
+              navigate("/inbox");
               setConfirmDelete(false);
               onClose();
             }}

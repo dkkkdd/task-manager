@@ -22,8 +22,6 @@ const ShowProjectForm = () => {
       setShowForm(false);
 
       const newProject = await createProject(title, color, false);
-      console.log("createProject returned ->", newProject);
-      console.log("store projects ->", useProjectsStore.getState().projects);
 
       if (!newProject) return;
 

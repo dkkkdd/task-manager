@@ -3,12 +3,37 @@ import { ConfirmModal } from "./ConfirmModal";
 import { useMemo } from "react";
 import { useTasksStore } from "@/stores/useTasksStore";
 import { useTaskListStore } from "@/stores/useTaskListStore";
+import { useModeStore } from "@/stores/useModesStore";
+import type { Task } from "@/types/tasks";
 
 const DeleteConfirmWrapper = () => {
   const { t } = useTranslation();
-  const tasks = useTasksStore((s) => s.tasks);
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
+  const mode = useModeStore((s) => s.mode);
+  const tasksCache = useTasksStore((s) => s.tasksCache);
   const taskToDeleteId = useTaskListStore((s) => s.taskToDeleteId);
-  const task = tasks.find((task) => task.id === taskToDeleteId);
+
+  const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
+  const tasks = tasksCache[cacheKey] || [];
+
+  const findTaskRecursively = (
+    taskList: Task[],
+    id: string,
+  ): Task | undefined => {
+    for (const task of taskList) {
+      if (task.id === id) return task;
+      if (task.subtasks && task.subtasks.length > 0) {
+        const found = findTaskRecursively(task.subtasks, id);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
+  const task = useMemo(() => {
+    if (!taskToDeleteId) return null;
+    return findTaskRecursively(tasks, taskToDeleteId);
+  }, [tasks, taskToDeleteId]);
 
   const deleteTask = useTasksStore((s) => s.deleteTask);
   const setTaskToDeleteId = useTaskListStore((s) => s.setTaskToDeleteId);
@@ -19,7 +44,9 @@ const DeleteConfirmWrapper = () => {
     }),
     [],
   );
-  if (!task || !taskToDeleteId) return;
+
+  if (!taskToDeleteId || !task) return null;
+
   return (
     <ConfirmModal
       title={t("delete_task_title")}
@@ -30,7 +57,10 @@ const DeleteConfirmWrapper = () => {
           components={transComponents}
         />
       }
-      onConfirm={() => deleteTask(task.id)}
+      onConfirm={async () => {
+        await deleteTask(task.id);
+        setTaskToDeleteId(null);
+      }}
       onClose={() => setTaskToDeleteId(null)}
     />
   );

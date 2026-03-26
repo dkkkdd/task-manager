@@ -1,30 +1,25 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { UserInfoBaseProps } from "@/types/UserInfo";
+import type { UserInfoBaseProps } from "@/types/userInfo";
 import { THEME_OPTIONS, LANG_OPTIONS } from "@/utils/userSettings";
-import { useAuthActions, useAuthState } from "@/context/AuthProvider";
 import { Select } from "@/components/Select";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export const UserInfoBase = ({
   anchorRef,
   setOpenConfirm,
   setOpenConfirmDelete,
   setOpenForm,
-  projectsCount,
-  tasksCount,
   timeAgo,
   formattedDate,
   handleThemeChange,
   currentTheme,
   handleLangChange,
 }: UserInfoBaseProps) => {
-  const { user } = useAuthState();
+  const user = useAuthStore((s) => s.user);
+  const isSyncing = useAuthStore((s) => s.isSyncing);
   const { t, i18n } = useTranslation();
-  const { getMe } = useAuthActions();
 
-  useEffect(() => {
-    getMe();
-  }, []);
   const themeOptions = useMemo(
     () =>
       THEME_OPTIONS.map((opt) => ({
@@ -33,6 +28,15 @@ export const UserInfoBase = ({
       })),
     [t],
   );
+
+  const CountDisplay = ({ count }: { count: number }) => (
+    <span
+      className={`text-xl font-bold text-black dark:text-white transition-opacity ${isSyncing ? "opacity-30 animate-pulse" : "opacity-100"}`}
+    >
+      {isSyncing ? "--" : count}
+    </span>
+  );
+
   if (!user) return null;
   return (
     <>
@@ -65,18 +69,14 @@ export const UserInfoBase = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 dark:bg-[#2a2a2a] p-3 rounded-lg flex flex-col items-center">
             <span className="icon-folder-open text-[#4270d1] text-lg mb-1" />
-            <span className="text-xl font-bold text-black dark:text-white">
-              {projectsCount}
-            </span>
+            <CountDisplay count={user._count.projects} />
             <span className="text-[10px] text-gray-500 uppercase font-semibold">
               {t("projects_count")}
             </span>
           </div>
           <div className="bg-gray-50 dark:bg-[#2a2a2a] p-3 rounded-lg flex flex-col items-center">
             <span className="icon-pushpin text-[#9d174d] text-lg mb-1" />
-            <span className="text-xl font-bold text-black dark:text-white">
-              {tasksCount}
-            </span>
+            <CountDisplay count={user._count.tasks} />
             <span className="text-[10px] text-gray-500 uppercase font-semibold">
               {t("active_tasks_count")}
             </span>

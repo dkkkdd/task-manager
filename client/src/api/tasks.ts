@@ -4,6 +4,7 @@ import type { Task } from "@/types/tasks";
 export type FetchTasksParams = {
   projectId?: string | null;
   mode: string;
+  showDone?: boolean;
 };
 
 export const tasksApi = {
@@ -13,6 +14,9 @@ export const tasksApi = {
     if (params) {
       if (params.mode) query.append("mode", params.mode);
       if (params.projectId) query.append("projectId", params.projectId);
+      if (params.showDone !== undefined) {
+        query.append("showDone", String(params.showDone));
+      }
     }
 
     return api.get<Task[]>(`/tasks?${query.toString()}`, { signal });

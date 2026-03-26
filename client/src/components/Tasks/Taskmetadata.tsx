@@ -1,74 +1,62 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-
 import type { Project } from "@/types/project";
 import { formatFullDate } from "@/utils/dateFormatters";
 import { Calendar } from "@/components/Calendar/Calendar";
-import type { Locale } from "react-day-picker";
 import { dateLocales } from "@/i18n";
-import { enUS } from "date-fns/locale";
+import { formatDateLabel, dateColor } from "@/utils/dateFormatters";
+import { enUS } from "react-day-picker/locale/en-US";
+import type { Task } from "@/types/tasks";
 
 interface TaskMetadataProps {
-  deadline?: Date | null;
-  reminderAt?: string | null;
-  completedAt?: Date | null;
-  subCount: number | null;
-  subDone: number | null;
   projectOfTask: Project | null;
   mode: string;
-  isDone: boolean;
-  isSelectionMode?: boolean;
-  dateColor: (
-    dateInput: Date | null,
-    reminderAt?: string | null,
-  ) => { color: string; icon: string };
+  task: Task;
+  isSelectionMode: boolean;
 
-  formatDateLabel: (
-    dateInput: Date | null,
-    locale: Pick<Locale, "options" | "localize" | "formatLong">,
-  ) => string;
-  onDateUpdate: (date: Date | null) => void;
-  onTimeUpdate: (time: string | null) => void;
+  onDateUpdate: (date: string | null) => void;
   onProjectClick: (projectId: string | null) => void;
 }
 
 export const TaskMetadata = memo(function TaskMetadata({
-  deadline,
-  reminderAt,
-  completedAt,
-  subCount,
-  subDone,
   projectOfTask,
   mode,
-  isDone,
+  task,
   isSelectionMode,
-  dateColor,
-  formatDateLabel,
+
   onDateUpdate,
-  onTimeUpdate,
   onProjectClick,
 }: TaskMetadataProps) {
   const { t, i18n } = useTranslation();
 
   const locale = dateLocales[i18n.language] || enUS;
+  const subtasksStats = useMemo(
+    () => ({
+      subCount: task.subtasks?.length || 0,
+      subDone: task.subtasks?.filter((t) => t.isDone).length || 0,
+    }),
+    [task.subtasks],
+  );
+  const deadlineDate = task.deadline ? new Date(task.deadline) : null;
+
+  const shouldShowTime =
+    deadlineDate &&
+    (deadlineDate.getHours() !== 23 || deadlineDate.getMinutes() !== 59);
+
+  const dateLabel = formatDateLabel(deadlineDate, locale);
+  const meta = dateColor(deadlineDate);
 
   const isCompletedMode = mode === "completed";
-  const currentDeadlineStr = deadline ? new Date(deadline) : null;
-
-  const dateLabel = formatDateLabel(currentDeadlineStr, locale);
-
-  const meta = dateColor(currentDeadlineStr, reminderAt);
-  const isDefaultColor = meta.color === "currentColor";
-  const { label, time } = formatFullDate(completedAt || null, locale);
+  const { label, time } = formatFullDate(task.completedAt || null, locale);
 
   const title = ["today", "tomorrow", "yesterday"].includes(label)
     ? t(label)
     : label;
 
   const shouldShowMetadata =
-    subCount !== 0 ||
-    currentDeadlineStr ||
-    (isCompletedMode && completedAt) ||
+    subtasksStats.subCount !== 0 ||
+    task.deadline ||
+    (isCompletedMode && task.completedAt) ||
     mode === "today" ||
     mode === "overdue";
 
@@ -76,47 +64,47 @@ export const TaskMetadata = memo(function TaskMetadata({
 
   return (
     <div className="flex items-center text-[12px] md:text-[15px] gap-2 w-full flex-wrap">
-      {subCount !== 0 && (
+      {subtasksStats.subCount !== 0 && (
         <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
           <span className="icon-pie-chart" />
-          {subDone}/{subCount}
+          {subtasksStats.subDone}/{subtasksStats.subCount}
         </div>
       )}
 
-      {currentDeadlineStr && !isCompletedMode && (
+      {task.deadline && !isCompletedMode && (
         <button
           style={{
-            color: isDone || isDefaultColor ? undefined : meta.color,
-            pointerEvents: isDone ? "none" : "all",
+            color:
+              task.isDone || meta.color === "currentColor"
+                ? undefined
+                : meta.color,
+            pointerEvents: task.isDone ? "none" : "all",
           }}
           className={`flex items-center gap-1 ${
-            isDone
+            task.isDone
               ? "text-gray-400 dark:text-gray-500"
-              : isDefaultColor
+              : meta.color === "currentColor"
                 ? "text-gray-600 dark:text-gray-400"
                 : ""
           }`}
           onClick={(e) => e.stopPropagation()}
           disabled={isSelectionMode}
         >
-          <Calendar
-            date={currentDeadlineStr}
-            setDate={onDateUpdate}
-            time={reminderAt || null}
-            setTime={onTimeUpdate}
-          >
-            <span className="flex items-center gap-1 cursor-pointer">
+          <Calendar date={task.deadline} setDate={onDateUpdate}>
+            <span className="flex items-center gap-1 cursor-pointer !md:text-[0.8em]">
               <span className={meta.icon} />
-              {t(dateLabel)}
-              {reminderAt && (
-                <span className="ml-1 opacity-80">{reminderAt}</span>
+              {t(dateLabel.toLowerCase())}
+              {shouldShowTime && (
+                <span className="opacity-80">
+                  {deadlineDate.toTimeString().slice(0, 5)}
+                </span>
               )}
             </span>
           </Calendar>
         </button>
       )}
 
-      {isCompletedMode && completedAt && (
+      {isCompletedMode && task.completedAt && (
         <span className="text-[10px] opacity-60 text-gray-500 dark:text-gray-400">
           {t("completed")}: {title} - {time}
         </span>
@@ -128,16 +116,15 @@ export const TaskMetadata = memo(function TaskMetadata({
             e.stopPropagation();
             onProjectClick(projectOfTask?.id || null);
           }}
-          className="px-1.5 py-0.5 text-[8px] md:text-[10px] flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer rounded-md transition-colors"
+          className="px-1.5 py-0.5 text-[8px] md:text-[10px] flex items-center gap-1 hover:bg-black/5 
+            dark:hover:bg-white/10 cursor-pointer rounded-md transition-colors"
         >
           <span
             style={{ color: projectOfTask?.color || "#888" }}
-            className={`icon-${
-              projectOfTask?.title ? "heart-svgrepo-com" : "price-tag"
-            }`}
+            className={`${projectOfTask ? "icon-heart-svgrepo-com" : "icon-inbox"}`}
           />
           <span className="opacity-60 text-gray-600 dark:text-gray-300">
-            {projectOfTask?.title || "Inbox"}
+            {projectOfTask?.title || t("inbox")}
           </span>
         </span>
       )}

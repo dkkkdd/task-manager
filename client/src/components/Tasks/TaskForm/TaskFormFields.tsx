@@ -3,18 +3,16 @@ import { Select } from "@/components/Select";
 import { Calendar } from "@/components/Calendar/Calendar";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
 import { useTranslation } from "react-i18next";
-import type { Task } from "@/types/tasks";
+import type { TaskFormData } from "@/types/tasks";
 import type { Project } from "@/types/project";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 
 interface Props {
-  formData: Partial<Task>;
-  setFormData: (updater: (prev: Partial<Task>) => Partial<Task>) => void;
+  formData: TaskFormData;
+  setFormData: React.Dispatch<React.SetStateAction<TaskFormData>>;
   formMode: "create" | "edit";
   isSubTask: boolean;
   titleRef: React.RefObject<HTMLInputElement | null>;
-  isSubmitting: boolean;
-
   onClose: () => void;
 }
 
@@ -24,44 +22,47 @@ export const TaskFormFields = ({
   setFormData,
   isSubTask,
   titleRef,
-  isSubmitting,
   onClose,
 }: Props) => {
   const { t } = useTranslation();
+  const projects = useProjectsStore((s) => s.projects);
 
-  const handleChange = <K extends keyof Task>(field: K, value: Task[K]) => {
+  const handleChange = <K extends keyof TaskFormData>(
+    field: K,
+    value: TaskFormData[K],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const projects = useProjectsStore((s) => s.projects);
+
   return (
     <>
       <div className="flex items-center justify-between mb-2">
         <p className="font-medium text-black dark:text-white flex items-center gap-4">
           {formMode === "edit" ? t("edit_task") : t("add_task")}
-          {formData.isDone && (
-            <span className="icon-checkmark p-2 border-[1px] rounded-full text-green-900" />
-          )}
         </p>
       </div>
 
       <div className="flex-1">
         <input
+          name="task title"
           ref={titleRef}
           value={formData.title ?? ""}
           onChange={(e) => handleChange("title", e.target.value)}
           placeholder={t("task_title_placeholder")}
           autoFocus
-          className="w-full text-sm py-1.5 mb-1 bg-transparent outline-none text-black dark:text-white"
-          maxLength={170}
+          className="w-full text-sm bg-transparent outline-none text-black dark:text-white"
+          maxLength={150}
         />
 
         <TextareaAutosize
           minRows={2}
           maxRows={5}
+          name="task commmit"
+          maxLength={250}
           value={formData.comment ?? ""}
           onChange={(e) => handleChange("comment", e.target.value)}
           placeholder={t("comment_placeholder")}
-          className="w-full text-xs py-1.5 mb-2 resize-none bg-transparent outline-none text-black dark:text-white"
+          className="w-full text-xs py-1 resize-none bg-transparent outline-none text-black dark:text-white"
         />
 
         <div className="flex gap-2 items-center flex-wrap pb-1">
@@ -82,15 +83,10 @@ export const TaskFormFields = ({
             />
           </div>
 
-          <div
-            className="w-fit shrink-0"
-            onMouseDown={(e) => e.preventDefault()}
-          >
+          <div className="w-fit shrink-0">
             <Calendar
-              time={formData.reminderAt ?? null}
-              setTime={(val) => handleChange("reminderAt", val)}
-              date={formData.deadline ?? null}
-              setDate={(val) => handleChange("deadline", val)}
+              date={formData.deadline}
+              setDate={(newDeadline) => handleChange("deadline", newDeadline)}
             />
           </div>
 
@@ -126,14 +122,14 @@ export const TaskFormFields = ({
         <button
           type="button"
           onClick={onClose}
-          className="py-3 px-5 rounded-xl text-gray-500 dark:text-gray-400 bg-black/5 dark:bg-white/5"
+          className="py-2.5 px-5 rounded-xl text-gray-500 dark:text-gray-400 bg-black/5 dark:bg-white/5 hover:bg-black/10 transition-colors"
         >
           {t("cancel")}
         </button>
         <button
           type="submit"
-          disabled={!formData.title?.trim() || isSubmitting}
-          className="py-3 px-5 rounded-xl bg-[#9d174d] text-white disabled:opacity-50"
+          disabled={!formData.title?.trim()}
+          className="py-2.5 px-5 rounded-xl bg-[#9d174d] text-white disabled:opacity-50 hover:bg-[#831440] transition-colors"
         >
           {formMode === "create" ? t("add_btn") : t("save_btn")}
         </button>

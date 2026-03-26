@@ -8,6 +8,7 @@ export const UpdateUserInfoMobile = ({
 }: UpdateUserInfoProps) => {
   return (
     <MobileDrawer
+      isNested={true}
       onClose={onClose}
       open={isOpen}
       drawerDescription="Edit profile"

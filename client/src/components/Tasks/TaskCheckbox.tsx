@@ -2,8 +2,8 @@ import { memo } from "react";
 
 interface TaskCheckboxProps {
   isDone: boolean;
-  isSelectionMode: boolean;
-  isSelected: boolean;
+  isSelectionMode?: boolean;
+  isSelected?: boolean;
   priorityColor?: string;
   priorityBg?: string;
   onToggle: (e: React.MouseEvent) => void;
@@ -24,39 +24,18 @@ export const TaskCheckbox = memo(function TaskCheckboxAnimated({
       <div
         onClick={onSelect}
         className={`
-          min-w-5 h-5 rounded-lg border flex items-center justify-center cursor-pointer 
-          transition-all duration-200
+           relative min-w-[1.2em] min-h-[1.2em] border rounded-full cursor-pointer 
+        flex items-center justify-center 
+        transition-all duration-200
+        active:scale-90
+        hover:scale-110
           ${
             isSelected
-              ? "bg-[#9d174d] border-[#610c2e] text-white scale-95"
+              ? "bg-pink-700 border-[#999] text-white scale-95"
               : "border-black/30 dark:border-white/30 hover:border-[#9d174d] dark:hover:border-[#9d174d] hover:scale-105"
           }
         `}
-      >
-        {isSelected && (
-          <svg
-            viewBox="0 0 24 24"
-            className="w-5 h-5"
-            style={{
-              animation: "checkmark 0.3s ease-in-out",
-            }}
-          >
-            <path
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 13l4 4L19 7"
-              style={{
-                strokeDasharray: 20,
-                strokeDashoffset: 20,
-                animation: "checkmark-stroke 0.3s ease-in-out forwards",
-              }}
-            />
-          </svg>
-        )}
-      </div>
+      ></div>
     );
   }
 
