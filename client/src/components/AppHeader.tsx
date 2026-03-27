@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { TaskListMenu } from "./Tasks/TaskListMenu";
 import TaskSettingsMenu from "./Tasks/TaskSettingsMenu";
 import { ProjectTitle } from "./ProjectTitle";
-import { useLayout } from "./AppLayout";
+import { useLayout } from "@/context/layoutContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 export function AppHeader({ scroll }: { scroll: boolean }) {

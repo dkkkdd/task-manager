@@ -1,16 +1,9 @@
-import { useEffect } from "react";
-import OpenForm from "../OpenForm";
+import { SidebarActions } from "./SidebarActions";
 import FavoriteProjects from "@/components/Projects/FavoriteProjectsSection";
 import { ProjectsSection } from "@/components/Projects/ProjectSection";
-import { SidebarNavigation } from "../SidebarNavigation";
-import ShowUserInfo from "../ShowUserInfo";
-import { useProjectsStore } from "@/stores/useProjectsStore";
+import { SidebarNavigation } from "@/components/layout/Sidebar/SidebarNavigation";
 
 function Sidebar({ collapsed }: { collapsed: boolean }) {
-  const fetchProjects = useProjectsStore((s) => s.fetchProjects);
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
   return (
     <aside
       className={`
@@ -32,9 +25,7 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
           }
         `}
       >
-        <ShowUserInfo />
-
-        <OpenForm />
+        <SidebarActions />
 
         <div className="space-y-1">
           <SidebarNavigation />

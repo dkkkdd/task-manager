@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import DeleteConfirmWrapper from "../DeleteConfirmWrapper";
 import RenderTaskItem from "./RenderTaskCard";
 import { AddTaskSection } from "./AddTaskSection";
@@ -8,7 +7,7 @@ import { AppHeader } from "../AppHeader";
 import { useModeStore } from "@/stores/useModesStore";
 import { useTasksStore } from "@/stores/useTasksStore";
 import { ProjectTitle } from "../ProjectTitle";
-import { useLayout } from "../AppLayout";
+import { useLayout } from "@/context/layoutContext";
 import { Selector } from "../Selector";
 import { useSelectionStore } from "@/stores/useSelectionStore";
 import type { Task } from "@/types/tasks";
@@ -24,9 +23,9 @@ const getAllIds = (tasks: Task[]): string[] => {
 };
 export const TaskList = () => {
   const mode = useModeStore((s) => s.mode);
-  const showDone = useModeStore((s) => s.showDone);
+
   const selectedProjectId = useModeStore((s) => s.selectedProjectId);
-  const fetchTasks = useTasksStore((state) => state.fetchTasks);
+
   const loading = useTasksStore((s) => s.loading);
   const tasksCache = useTasksStore((s) => s.tasksCache);
   const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
@@ -44,10 +43,6 @@ export const TaskList = () => {
   const allTaskIds = getAllIds(tasks);
 
   const { scrollRef } = useLayout();
-
-  useEffect(() => {
-    fetchTasks();
-  }, [mode, selectedProjectId, showDone, fetchTasks]);
 
   const virtualizer = useVirtualizer({
     count: tasks.length,

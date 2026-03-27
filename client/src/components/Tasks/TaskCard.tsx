@@ -21,6 +21,7 @@ interface TaskCardProps {
     isCalOpen: boolean;
     deadline: string | null;
     priorityStyle: { bg?: string; color?: string };
+    visibleSubCount: number | null;
   };
   handlers: {
     onCardClick: (e: React.MouseEvent) => void;
@@ -47,6 +48,7 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
     isCalOpen,
     deadline,
     priorityStyle,
+    visibleSubCount,
   } = ui;
 
   const {
@@ -72,7 +74,7 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
         `}
       >
         <SubtaskToggle
-          subCount={task.subtasks?.length || null}
+          subCount={visibleSubCount}
           showSubTasks={showSubTasks}
           mode={mode}
           onToggle={setShowSubTasks}

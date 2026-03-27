@@ -5,9 +5,8 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-
 import { useTranslation } from "react-i18next";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { TaskList } from "@/components/Tasks/TaskList";
 import { AuthPage } from "@/components/AuthPage";
 import { useAuthStore } from "./stores/useAuthStore";
@@ -21,12 +20,7 @@ function AppContent() {
 
   useInitializeApp();
 
-  if (loading)
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#111] text-white">
-        {t("loading")}...
-      </div>
-    );
+  if (loading) return <div>{t("loading")}...</div>;
 
   return (
     <Routes>
@@ -48,14 +42,17 @@ function AppContent() {
       />
 
       {isAuthenticated ? (
-        <Route
-          path="/*"
-          element={
-            <AppLayout>
-              <TaskList />
-            </AppLayout>
-          }
-        />
+        <Route element={<AppLayout />}>
+          <Route path="/inbox" element={<TaskList />} />
+          <Route path="/today" element={<TaskList />} />
+          <Route path="/completed" element={<TaskList />} />
+          <Route path="/overdue" element={<TaskList />} />
+          <Route path="/project/:id" element={<TaskList />} />
+
+          {/* <Route path="/stats" element={<StatsPage />} /> */}
+
+          <Route path="*" element={<Navigate to="/inbox" replace />} />
+        </Route>
       ) : (
         <Route
           path="*"

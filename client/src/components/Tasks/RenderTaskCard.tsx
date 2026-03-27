@@ -27,6 +27,7 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
   const activeParentId = useTaskListStore((s) => s.activeParentId);
   const selectionMode = useSelectionStore((s) => s.selectionMode);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const showDone = useModeStore((s) => s.showDone);
 
   const toggleSelect = useSelectionStore((s) => s.toggleSelect);
 
@@ -108,6 +109,17 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
   const projectOfTask = projects.find((p) => p.id === task.projectId) || null;
   const parentTask = tasks.find((t: Task) => t.id === task.parentId);
 
+  const fullSubtasks = task.subtasks || [];
+  const fullSubCount = fullSubtasks.length;
+  const fullSubDone = fullSubtasks.filter((s) => s.isDone).length;
+
+  const visibleSubtasks = useMemo(() => {
+    if (showDone) return fullSubtasks;
+    return fullSubtasks.filter((sub) => !sub.isDone);
+  }, [fullSubtasks, showDone]);
+
+  const visibleSubCount = visibleSubtasks.length;
+
   const priorityStyle = useMemo(() => {
     const option = PRIORITY_OPTIONS.find((opt) => opt.value === task.priority);
     return { bg: option?.bg, color: option?.color };
@@ -124,6 +136,12 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
     isCalOpen,
     deadline: task.deadline,
     priorityStyle,
+    subtasksStats: {
+      subCount: fullSubCount,
+      subDone: fullSubDone,
+    },
+    // Для стрелки SubtaskToggle — только видимые
+    visibleSubCount,
   };
 
   const handlers = {
