@@ -161,42 +161,51 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     }
   },
 
-  updateDone: async (id, done) => {
-    const snapshot = { ...get().tasksCache };
+  updateDone: async (id: string, done: boolean) => {
+    const snapshot = JSON.parse(JSON.stringify(get().tasksCache));
     const { showDone } = useModeStore.getState();
-    const patch = { isDone: done, completedAt: done ? new Date() : null };
+
+    const patch = {
+      isDone: done,
+      completedAt: done ? new Date() : null,
+    };
 
     set((state) => {
       const newCache = { ...state.tasksCache };
 
-      Object.keys(newCache).forEach((k) => {
-        let updated = newCache[k].map((task) => {
-          if (task.id === id) return { ...task, ...patch };
-          return {
-            ...task,
-            subtasks: task.subtasks
-              ?.map((s) => (s.id === id ? { ...s, ...patch } : s))
-              .sort((a, b) => Number(a.isDone) - Number(b.isDone)),
-          };
+      Object.keys(newCache).forEach((key) => {
+        newCache[key] = newCache[key].map((task) => {
+          if (task.id === id) {
+            return { ...task, ...patch };
+          }
+
+          if (task.subtasks?.length) {
+            const updatedSubtasks = task.subtasks.map((sub) =>
+              sub.id === id ? { ...sub, ...patch } : sub,
+            );
+
+            return {
+              ...task,
+              subtasks: updatedSubtasks.sort(
+                (a, b) => Number(a.isDone) - Number(b.isDone),
+              ),
+            };
+          }
+
+          return task;
         });
 
-        updated.sort((a, b) => Number(a.isDone) - Number(b.isDone));
-
-        if (!showDone) {
+        if (!showDone && done) {
           const isFilterTarget =
-            k === "today" ||
-            k === "overdue" ||
-            k.startsWith("project-") ||
-            k === "inbox";
-          if (isFilterTarget && done) {
-            updated = updated.filter((t) => t.id !== id);
-          }
-          if (k === "completed" && !done) {
-            updated = updated.filter((t) => t.id !== id);
+            key === "today" ||
+            key === "overdue" ||
+            key.startsWith("project-") ||
+            key === "inbox";
+
+          if (isFilterTarget) {
+            newCache[key] = newCache[key].filter((task) => task.id !== id);
           }
         }
-
-        newCache[k] = updated;
       });
 
       return { tasksCache: newCache };
@@ -204,7 +213,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
 
     try {
       await tasksApi.updateStatus(id, done);
-    } catch {
+    } catch (error) {
+      console.error("Failed to update task status:", error);
       set({ tasksCache: snapshot });
     }
   },

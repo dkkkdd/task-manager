@@ -162,9 +162,14 @@ const RenderTaskItem = ({ task }: { task: Task }) => {
 
       {isExpanded && (
         <div className="subtasks-container pl-9 flex flex-col">
-          {task.subtasks?.map((sub: Task) => (
-            <RenderTaskItem key={sub.id} task={sub} />
-          ))}
+          {task.subtasks
+            ?.filter((sub) => {
+              const { showDone } = useModeStore.getState();
+              return showDone || !sub.isDone;
+            })
+            .map((sub: Task) => (
+              <RenderTaskItem key={sub.id} task={sub} />
+            ))}
 
           <TaskForm
             openForm={activeParentId === task.id}

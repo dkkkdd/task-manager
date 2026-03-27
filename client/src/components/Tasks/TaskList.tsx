@@ -39,7 +39,7 @@ export const TaskList = () => {
   const bulkComplete = useSelectionStore((s) => s.bulkComplete);
   const bulkDelete = useSelectionStore((s) => s.bulkDelete);
   const bulkProjectChange = useSelectionStore((s) => s.bulkProjectChange);
-
+  console.log(tasksCache);
   const bulkUpdateDeadline = useSelectionStore((s) => s.bulkUpdateDeadline);
   const allTaskIds = getAllIds(tasks);
 
