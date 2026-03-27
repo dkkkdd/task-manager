@@ -23,7 +23,6 @@ export const getTasks = async (
     const isShowDone = showDone === "true";
 
     const where: Prisma.TaskWhereInput = { userId };
-
     const isFlatMode = ["today", "overdue", "completed"].includes(mode || "");
 
     if (!isFlatMode) {
@@ -68,11 +67,14 @@ export const getTasks = async (
 
     const tasks = await prisma.task.findMany({
       where,
-      include: {
-        subtasks: {
-          orderBy: [{ isDone: "asc" }, { order: "asc" }],
-        },
-      },
+
+      include: isFlatMode
+        ? undefined
+        : {
+            subtasks: {
+              orderBy: [{ isDone: "asc" }, { order: "asc" }],
+            },
+          },
       orderBy: [{ isDone: "asc" }, { order: "asc" }],
     });
 
