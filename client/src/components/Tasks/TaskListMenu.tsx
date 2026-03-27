@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { ProjectMenuController } from "@/components/Projects/Menu/ProjectMenuController";
-import { MenuItem } from "@/components/Projects/Menu/MenuItem";
+
+import ProjectMenuController from "@/components/Projects/Menu/ProjectMenuController";
+
 import { useModeStore } from "@/stores/useModesStore";
 
 interface TaskListMenuProps {
@@ -9,7 +9,6 @@ interface TaskListMenuProps {
 }
 
 export const TaskListMenu = ({ mode }: TaskListMenuProps) => {
-  const { t } = useTranslation();
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const selectedProjectId = useModeStore((s) => s.selectedProjectId);
 
@@ -47,27 +46,6 @@ export const TaskListMenu = ({ mode }: TaskListMenuProps) => {
         projectId={menu.projectId}
         setMenu={setMenu}
         closeMenu={() => setMenu({ anchor: null, projectId: menu.projectId })}
-        additionalItems={
-          <>
-            <MenuItem icon="icon-books" onClick={() => console.log("k")}>
-              {t("add_section")}
-            </MenuItem>
-
-            {/* {menu.anchor && (
-              <MenuItem
-                icon="icon-bookmarks"
-                onClick={() => {
-                  onStartSelection();
-                  setMenu({ anchor: null, projectId: null });
-                }}
-              >
-                {t("start_selection")}
-              </MenuItem>
-            )} */}
-
-            <div className="border-t border-black/5 dark:border-white/5 my-1 mx-1" />
-          </>
-        }
       />
     </>
   );

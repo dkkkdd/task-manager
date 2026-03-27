@@ -1,37 +1,44 @@
 import { forwardRef } from "react";
 
-interface MenuItemProps {
+interface MenuItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   icon: string;
-  onClick?: () => void;
-  onKeyDown?: React.KeyboardEventHandler<HTMLLIElement>;
-  variant?: string;
+  variant?: "default" | "danger";
   active?: boolean;
 }
 
-export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
+const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
   (
-    { icon, onClick, onKeyDown, children, variant = "default", active },
+    {
+      icon,
+      onClick,
+      children,
+      variant = "default",
+      active,
+      className,
+      ...props
+    },
     ref,
-  ) => {
-    return (
-      <li
+  ) => (
+    <li role="none" className="list-none w-full">
+      <button
         ref={ref}
         role="menuitem"
-        tabIndex={active ? 0 : -1}
+        type="button"
+        {...props}
         onClick={onClick}
-        onKeyDown={onKeyDown}
-        className={`w-full text-left p-2 cursor-pointer rounded transition-colors flex items-center gap-2 focus:outline-none
-          ${active ? "bg-black/5 dark:bg-[#333]" : ""}
-          ${
-            variant === "danger"
-              ? "hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 dark:text-red-400"
-              : "hover:bg-black/5 dark:hover:bg-[#333] text-gray-700 dark:text-white"
-          }`}
+        className={`
+          w-full text-left p-2 cursor-pointer rounded transition-colors 
+          flex items-center gap-2 outline-none border-none
+          ${active ? "bg-black/5 dark:bg-[#333] ring-1 ring-inset ring-black/5" : "hover:bg-black/5 dark:hover:bg-[#333]"}
+          ${variant === "danger" ? "text-red-500 dark:text-red-400" : "text-gray-700 dark:text-white"}
+          ${className || ""}
+        `}
       >
-        <span className={`${icon} opacity-[0.7]`} />
-        {children}
-      </li>
-    );
-  },
+        <span className={`${icon} opacity-70`} />
+        <span className="truncate flex-1">{children}</span>
+      </button>
+    </li>
+  ),
 );
+export default MenuItem;

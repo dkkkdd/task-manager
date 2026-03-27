@@ -1,7 +1,7 @@
+import ShowProjectForm from "@/components/Projects/Form/ShowProjectForm";
 import { SidebarActions } from "./SidebarActions";
-import FavoriteProjects from "@/components/Projects/FavoriteProjectsSection";
-import { ProjectsSection } from "@/components/Projects/ProjectSection";
-import { SidebarNavigation } from "@/components/layout/Sidebar/SidebarNavigation";
+import ProjectCategory from "@/components/Projects/ui/ProjectCategory";
+import { SidebarNavigation } from "./SidebarNavigation";
 
 function Sidebar({ collapsed }: { collapsed: boolean }) {
   return (
@@ -29,8 +29,12 @@ function Sidebar({ collapsed }: { collapsed: boolean }) {
 
         <div className="space-y-1">
           <SidebarNavigation />
-          <FavoriteProjects />
-          <ProjectsSection />
+          <ProjectCategory type="favorites" titleKey="favorite_projects" />
+          <ProjectCategory
+            type="all"
+            titleKey="projects_count"
+            action={<ShowProjectForm />}
+          />
         </div>
       </div>
     </aside>

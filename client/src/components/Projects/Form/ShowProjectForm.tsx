@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ModalPortal from "@/features/ModalPortal";
-import { ProjectForm } from "./ProjectForm";
+import ProjectForm from ".";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 import { useNavigate } from "react-router-dom";
 import { useModeStore } from "@/stores/useModesStore";
@@ -22,9 +22,7 @@ const ShowProjectForm = () => {
       setShowForm(false);
 
       const newProject = await createProject(title, color, false);
-
       if (!newProject) return;
-
       openProject(newProject.id);
       navigate(`/project/${newProject.id}`);
     } catch (e) {

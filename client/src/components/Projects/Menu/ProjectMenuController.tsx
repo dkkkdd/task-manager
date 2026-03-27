@@ -1,112 +1,99 @@
-import { useState } from "react";
-import type { Project } from "@/types/project";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import ModalPortal from "@/features/ModalPortal";
-import { ConfirmModal } from "@/components/ConfirmModal";
-import { ProjectForm } from "@/components/Projects/ProjectForm";
-import { ProjectMenu } from "@/components/Projects/Menu/ProjectMenu";
 import { useProjectsStore } from "@/stores/useProjectsStore";
 import { useModeStore } from "@/stores/useModesStore";
-import { useNavigate } from "react-router-dom";
+import ModalPortal from "@/features/ModalPortal";
 
-type MenuState = {
+import ProjectMenu from "./ProjectMenu";
+import { ConfirmModal } from "@/components/ConfirmModal";
+import ProjectForm from "../Form";
+
+interface MenuState {
   anchor: HTMLElement | null;
   projectId: string | null;
-};
-
-interface ProjectFormData {
-  title?: string;
-  description?: string;
-  color?: string;
 }
 
-export function ProjectMenuController({
-  anchor,
-  projectId,
-  setMenu,
-  additionalItems,
-  closeMenu,
-}: {
-  additionalItems?: React.ReactNode;
+interface ProjectMenuControllerProps {
   anchor: HTMLElement | null;
   projectId: string | null;
   setMenu: React.Dispatch<React.SetStateAction<MenuState>>;
   closeMenu: () => void;
-}) {
+}
+function ProjectMenuController({
+  anchor,
+  projectId,
+  setMenu,
+  closeMenu,
+}: ProjectMenuControllerProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const setMode = useModeStore((s) => s.setMode);
-  const projects = useProjectsStore((s) => s.projects);
+  const [modal, setModal] = useState<"edit" | "delete" | null>(null);
+
+  const project = useProjectsStore((s) =>
+    s.projects.find((p) => p.id === projectId),
+  );
+
   const toggleFavorite = useProjectsStore((s) => s.toggleFavorite);
   const deleteProject = useProjectsStore((s) => s.deleteProject);
   const updateProject = useProjectsStore((s) => s.updateProject);
+  const setMode = useModeStore((s) => s.setMode);
 
-  const [editing, setEditing] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const { t } = useTranslation();
-
-  const project = projects.find((p: Project) => p.id === projectId);
-  const isFavorite = project?.favorites;
-
-  const onClose = () => {
+  const handleCloseAll = useCallback(() => {
+    setModal(null);
     setMenu({ anchor: null, projectId: null });
-  };
-  if (!projectId) return null;
+  }, [setMenu]);
+
+  if (!projectId || !project) return null;
 
   return (
     <>
-      {anchor && projectId && (
-        <ModalPortal>
-          <ProjectMenu
-            anchorEl={anchor}
-            // onClose={onClose}
-            resetMenu={onClose}
-            isFavorite={isFavorite}
-            onToggleFavorite={() =>
-              project && toggleFavorite(projectId, !project.favorites)
-            }
-            onEdit={() => setEditing(true)}
-            onDelete={() => setConfirmDelete(true)}
-            closeMenu={closeMenu}
-            additionalItems={additionalItems}
-          />
-        </ModalPortal>
+      {anchor && (
+        <ProjectMenu
+          anchorEl={anchor}
+          isFavorite={project.favorites}
+          onToggleFavorite={() =>
+            toggleFavorite(project.id, !project.favorites)
+          }
+          onEdit={() => setModal("edit")}
+          onDelete={() => setModal("delete")}
+          resetMenu={handleCloseAll}
+          closeMenu={closeMenu}
+        />
       )}
 
-      {confirmDelete && project && (
+      {modal === "delete" && (
         <ModalPortal>
           <ConfirmModal
             title={t("delete_project_title")}
-            variant="primary"
-            cancelText={t("cancel")}
-            confirmText={t("delete_now")}
             message={t("delete_project_confirm", { title: project.title })}
+            confirmText={t("delete_now")}
             onConfirm={() => {
               deleteProject(project.id);
               setMode("inbox");
               navigate("/inbox");
-              setConfirmDelete(false);
-              onClose();
+              handleCloseAll();
             }}
-            onClose={() => setConfirmDelete(false)}
+            onClose={() => setModal(null)}
           />
         </ModalPortal>
       )}
 
-      {project && (
+      {modal === "edit" && (
         <ModalPortal>
           <ProjectForm
             mode="edit"
             initialProject={project}
-            open={editing}
-            onSubmit={(data: ProjectFormData) => {
+            open={true}
+            onSubmit={(data) => {
               updateProject(project.id, data);
-              setEditing(false);
-              onClose();
+              handleCloseAll();
             }}
-            onClose={() => setEditing(false)}
+            onClose={() => setModal(null)}
           />
         </ModalPortal>
       )}
     </>
   );
 }
+export default ProjectMenuController;

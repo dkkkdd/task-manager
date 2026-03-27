@@ -6,14 +6,16 @@ import {
   shift,
   useDismiss,
   useRole,
+  useClick,
   useListNavigation,
+  useTypeahead,
   useInteractions,
   FloatingPortal,
   FloatingFocusManager,
 } from "@floating-ui/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { MenuItem } from "@/components/Projects/Menu/MenuItem";
+import MenuItem from "@/components/Projects/Menu/MenuItem";
 
 interface ProjectMenuProps {
   anchorEl: HTMLElement | null;
@@ -23,10 +25,9 @@ interface ProjectMenuProps {
   onEdit: () => void;
   closeMenu: () => void;
   onDelete: () => void;
-  additionalItems?: React.ReactNode;
 }
 
-export function ProjectMenu({
+function ProjectMenu({
   anchorEl,
   resetMenu,
   closeMenu,
@@ -34,12 +35,13 @@ export function ProjectMenu({
   onToggleFavorite,
   onEdit,
   onDelete,
-
-  additionalItems,
 }: ProjectMenuProps) {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const listRef = useRef<Array<HTMLElement | null>>([]);
   const { t } = useTranslation();
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const listRef = useRef<Array<HTMLButtonElement | null>>([]);
+  const listLabelsRef = useRef<Array<string | null>>([]);
+
   const { refs, floatingStyles, context, isPositioned } = useFloating({
     open: Boolean(anchorEl),
     onOpenChange: (open) => !open && resetMenu(),
@@ -49,47 +51,58 @@ export function ProjectMenu({
     middleware: [offset(4), flip(), shift()],
   });
 
+  useEffect(() => {
+    listLabelsRef.current = [
+      t("edit"),
+      isFavorite ? t("remove_from_favorites") : t("add_to_favorites"),
+      t("activity_log"),
+      t("add_section"),
+      t("delete"),
+    ];
+  }, [t, isFavorite]);
+
+  const click = useClick(context);
   const dismiss = useDismiss(context, {
-    outsidePressEvent: "click",
-    outsidePress: (event) => {
-      event.stopPropagation();
-      event.preventDefault();
-      return true;
-    },
-  });
-
-  const role = useRole(context, { role: "menu" });
-
-  const listNavigation = useListNavigation(context, {
-    listRef,
-    activeIndex,
-    onNavigate: setActiveIndex,
-    loop: true,
+    outsidePressEvent: "pointerdown",
   });
 
   const { getFloatingProps, getItemProps } = useInteractions([
+    click,
     dismiss,
-    role,
-    listNavigation,
+    useRole(context, { role: "menu" }),
+    useListNavigation(context, {
+      listRef,
+      activeIndex,
+      onNavigate: setActiveIndex,
+      loop: true,
+    }),
+    useTypeahead(context, {
+      listRef: listLabelsRef,
+      activeIndex,
+      onMatch: setActiveIndex,
+    }),
   ]);
 
   if (!anchorEl) return null;
 
   return (
     <FloatingPortal>
-      <FloatingFocusManager context={context} modal={false}>
+      <FloatingFocusManager
+        context={context}
+        modal={false}
+        initialFocus={0}
+        returnFocus={true}
+      >
         <ul
-          // eslint-disable-next-line react-hooks/refs
+          data-vaul-no-drag
           ref={refs.setFloating}
-          role="menu"
           style={{
             ...floatingStyles,
             zIndex: 2000,
             opacity: isPositioned ? 1 : 0,
-            visibility: isPositioned ? "visible" : "hidden",
           }}
           {...getFloatingProps()}
-          className="transition-opacity duration-200 z-[999] pointer-events-auto min-w-[20em] max-w-[20em] bg-white dark:bg-[#232323] border border-black/10 dark:border-[#444] rounded-md p-1 shadow-xl outline-none shadow-black/5 dark:shadow-black/40"
+          className="min-w-[18em] pointer-events-auto bg-white dark:bg-[#232323] border border-black/10 dark:border-[#444] rounded-md p-1 shadow-xl outline-none"
         >
           <MenuItem
             ref={(el) => {
@@ -98,7 +111,8 @@ export function ProjectMenu({
             active={activeIndex === 0}
             icon="icon-pencil"
             {...getItemProps({
-              onClick: () => {
+              onClick: (e) => {
+                e.stopPropagation();
                 onEdit();
                 closeMenu();
               },
@@ -114,15 +128,10 @@ export function ProjectMenu({
             active={activeIndex === 1}
             icon="icon-bookmark"
             {...getItemProps({
-              onClick: () => {
+              onClick: (e) => {
+                e.stopPropagation();
                 onToggleFavorite();
                 resetMenu();
-              },
-              onKeyDown: (e) => {
-                if (e.key === "Enter") {
-                  onEdit();
-                  closeMenu();
-                }
               },
             })}
           >
@@ -140,22 +149,30 @@ export function ProjectMenu({
             {t("activity_log")}
           </MenuItem>
 
-          {additionalItems && (
-            <div className="border-t border-black/5 dark:border-white/5 my-1 mx-1" />
-          )}
-          {additionalItems}
-
           <MenuItem
             ref={(el) => {
               listRef.current[3] = el;
             }}
             active={activeIndex === 3}
+            icon="icon-books"
+            {...getItemProps({ onClick: resetMenu })}
+          >
+            {t("add_section")}
+          </MenuItem>
+
+          <div className="my-1 border-t border-black/5 dark:border-white/5" />
+
+          <MenuItem
+            ref={(el) => {
+              listRef.current[4] = el;
+            }}
+            active={activeIndex === 4}
             icon="icon-bin"
             variant="danger"
             {...getItemProps({
-              onClick: () => {
+              onClick: (e) => {
+                e.stopPropagation();
                 onDelete();
-
                 closeMenu();
               },
             })}
@@ -167,3 +184,4 @@ export function ProjectMenu({
     </FloatingPortal>
   );
 }
+export default ProjectMenu;

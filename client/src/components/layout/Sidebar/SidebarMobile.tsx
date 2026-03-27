@@ -1,8 +1,8 @@
 import { Drawer } from "vaul";
-import { ProjectPage } from "@/components/Projects/ProjectPage";
+import ProjectPage from "@/components/Projects/ui/ProjectPage";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useState } from "react";
-import { SidebarNavigation } from "@/components/layout/Sidebar/SidebarNavigation";
+import { SidebarNavigation } from "./SidebarNavigation";
 
 function MobileMenu() {
   const [showProjects, setShowProjects] = useState(false);
