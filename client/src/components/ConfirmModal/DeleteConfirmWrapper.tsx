@@ -6,6 +6,20 @@ import { useTaskListStore } from "@/stores/useTaskListStore";
 import { useModeStore } from "@/stores/useModesStore";
 import type { Task } from "@/types/tasks";
 
+const findTaskRecursively = (
+  taskList: Task[],
+  id: string,
+): Task | undefined => {
+  for (const task of taskList) {
+    if (task.id === id) return task;
+    if (task.subtasks && task.subtasks.length > 0) {
+      const found = findTaskRecursively(task.subtasks, id);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
 const DeleteConfirmWrapper = () => {
   const { t } = useTranslation();
   const selectedProjectId = useModeStore((s) => s.selectedProjectId);
@@ -15,20 +29,6 @@ const DeleteConfirmWrapper = () => {
 
   const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
   const tasks = tasksCache[cacheKey] || [];
-
-  const findTaskRecursively = (
-    taskList: Task[],
-    id: string,
-  ): Task | undefined => {
-    for (const task of taskList) {
-      if (task.id === id) return task;
-      if (task.subtasks && task.subtasks.length > 0) {
-        const found = findTaskRecursively(task.subtasks, id);
-        if (found) return found;
-      }
-    }
-    return undefined;
-  };
 
   const task = useMemo(() => {
     if (!taskToDeleteId) return null;

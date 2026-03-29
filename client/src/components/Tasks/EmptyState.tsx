@@ -1,8 +1,7 @@
 import { useModeStore } from "@/stores/useModesStore";
-import { useTaskListStore } from "@/stores/useTaskListStore";
-import { lazy } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-const TaskForm = lazy(() => import("./Tasks/TaskForm/TaskForm"));
+import TaskForm from "./TaskForm/TaskForm";
 
 const EMPTY_STATES_CONFIG = {
   inbox: {
@@ -35,8 +34,11 @@ const EMPTY_STATES_CONFIG = {
 export const EmptyState = () => {
   const { t } = useTranslation();
   const mode = useModeStore((s) => s.mode);
-  const openForm = useTaskListStore((s) => s.openForm);
-  const setOpenForm = useTaskListStore((s) => s.setOpenForm);
+  const [openForm, setOpenForm] = useState(false);
+
+  const config =
+    EMPTY_STATES_CONFIG[mode as keyof typeof EMPTY_STATES_CONFIG] ||
+    EMPTY_STATES_CONFIG.default;
 
   if (openForm) {
     return (
@@ -47,10 +49,6 @@ export const EmptyState = () => {
       />
     );
   }
-
-  const config =
-    EMPTY_STATES_CONFIG[mode as keyof typeof EMPTY_STATES_CONFIG] ||
-    EMPTY_STATES_CONFIG.default;
 
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center select-none animate-in fade-in duration-500">

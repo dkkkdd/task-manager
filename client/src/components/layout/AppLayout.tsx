@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const scrollRef = useRef<HTMLElement>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <LayoutContext.Provider value={{ scrollRef, collapsed, setCollapsed }}>

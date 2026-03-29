@@ -1,12 +1,11 @@
 import { memo } from "react";
 import type { Task } from "@/types/tasks";
+import type { Project } from "@/types/project";
 
 import { SubtaskToggle } from "@/components/Tasks/Subtasktoggle";
 import { TaskCheckbox } from "@/components/Tasks/TaskCheckbox";
-import { TaskMetadata } from "@/components/Tasks/Taskmetadata";
+import { TaskMetadata } from "@/components/Tasks/TaskMetadata";
 import { TaskActions } from "@/components/Tasks/Taskactions";
-
-import type { Project } from "@/types/project";
 
 interface TaskCardProps {
   task: Task;
@@ -17,22 +16,15 @@ interface TaskCardProps {
     selectionMode: boolean;
     selected: boolean;
     showSubTasks: boolean;
-    isMenuOpen: boolean;
-    isCalOpen: boolean;
-    deadline: string | null;
     priorityStyle: { bg?: string; color?: string };
-    visibleSubCount: number | null;
+    visibleSubCount: number;
   };
   handlers: {
     onCardClick: (e: React.MouseEvent) => void;
     onToggle: (e: React.MouseEvent) => void;
     onSelect: () => void;
-    onDateUpdate: (date: string | null) => void;
     onMenuClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-    onEdit: () => void;
-    setIsCalOpen: (val: boolean) => void;
     setShowSubTasks?: () => void;
-    onProjectClick: (projectId: string | null) => void;
   };
 }
 
@@ -44,94 +36,75 @@ const TaskCard = memo(({ task, ui, handlers }: TaskCardProps) => {
     selectionMode,
     selected,
     showSubTasks,
-    isMenuOpen,
-    isCalOpen,
-    deadline,
     priorityStyle,
     visibleSubCount,
   } = ui;
 
-  const {
-    onCardClick,
-    onToggle,
-    onSelect,
-    onDateUpdate,
-    onMenuClick,
-    onEdit,
-    setIsCalOpen,
-    setShowSubTasks,
-    onProjectClick,
-  } = handlers;
+  const { onCardClick, onToggle, onSelect, onMenuClick, setShowSubTasks } =
+    handlers;
 
   return (
-    <>
-      <div
-        onClick={onCardClick}
-        className={`
-          ${selected ? "dark:bg-[#262626] bg-black/10 rounded-lg" : ""}
-          group flex items-center w-full transition-colors relative cursor-pointer
-          ${task.isDone ? "opacity-80 text-gray-400 dark:text-gray-500" : ""}
-        `}
-      >
-        <SubtaskToggle
-          subCount={visibleSubCount}
-          showSubTasks={showSubTasks}
-          mode={mode}
-          onToggle={setShowSubTasks}
+    <div
+      onClick={onCardClick}
+      className={`
+        group flex items-center w-full transition-all relative cursor-pointer px-2
+        ${selected ? "dark:bg-white/5 bg-black/5 rounded-xl" : ""}
+        ${task.isDone ? "opacity-60" : ""}
+      `}
+    >
+      <SubtaskToggle
+        subCount={visibleSubCount}
+        showSubTasks={showSubTasks}
+        mode={mode}
+        onToggle={setShowSubTasks}
+      />
+
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <TaskCheckbox
+          isDone={task.isDone}
+          isSelectionMode={selectionMode}
+          isSelected={selected}
+          priorityColor={priorityStyle.color}
+          priorityBg={priorityStyle.bg}
+          onToggle={onToggle}
+          onSelect={onSelect}
         />
 
-        <div className="flex items-center gap-2 text-[16px] md:text-[15px] flex-1">
-          <TaskCheckbox
-            isDone={task.isDone}
-            isSelectionMode={!!selectionMode}
-            isSelected={!!selected}
-            priorityColor={priorityStyle.color}
-            priorityBg={priorityStyle.bg}
-            onToggle={onToggle}
-            onSelect={onSelect}
-          />
-
-          <div className="flex items-center justify-between flex-1 border-b border-black/10 dark:border-[#88888846] py-3 md:py-[0.4rem] pl-1">
-            <div className="flex sm:gap-[0.1em] flex-col flex-wrap min-w-0 flex-1">
-              <div
-                className={`md:text-[14px] ${
-                  task.isDone ? "line-through text-gray-400" : ""
-                } font-normal leading-tight`}
-              >
-                {task.title}
-              </div>
-
-              {task.comment && (
-                <div className="text-[12px] opacity-90 leading-normal text-gray-600 dark:text-gray-300">
-                  {task.comment}
-                </div>
-              )}
-
-              <TaskMetadata
-                projectOfTask={projectOfTask}
-                mode={mode}
-                task={task}
-                isSelectionMode={selectionMode}
-                onDateUpdate={onDateUpdate}
-                onProjectClick={onProjectClick}
-              />
+        <div className="flex items-center justify-between flex-1 border-b border-black/5 dark:border-white/5 py-3 md:py-2 min-w-0">
+          <div className="flex flex-col min-w-0 flex-1 pr-2">
+            <div
+              className={`text-[15px] leading-snug truncate ${
+                task.isDone
+                  ? "line-through text-gray-400 dark:text-gray-500"
+                  : "text-black dark:text-white"
+              }`}
+            >
+              {task.title}
             </div>
 
-            <TaskActions
+            {task.comment && (
+              <div className="text-[12px] opacity-60 truncate mt-0.5 text-black dark:text-white">
+                {task.comment}
+              </div>
+            )}
+
+            <TaskMetadata
+              projectOfTask={projectOfTask}
+              mode={mode}
+              task={task}
               isSelectionMode={selectionMode}
-              isMobile={isMobile}
-              isMenuOpen={isMenuOpen}
-              isCalOpen={isCalOpen}
-              currentDeadlineStr={deadline}
-              onEdit={onEdit}
-              onMenuClick={onMenuClick}
-              onDateUpdate={onDateUpdate}
-              setIsCalOpen={setIsCalOpen}
             />
           </div>
+
+          <TaskActions
+            isSelectionMode={selectionMode}
+            isMobile={isMobile}
+            task={task}
+            onMenuClick={onMenuClick}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 });
 

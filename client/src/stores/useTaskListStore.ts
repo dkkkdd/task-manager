@@ -4,13 +4,19 @@ interface TaskListStore {
   editingTaskId: string | null;
   taskToDeleteId: string | null;
   activeParentId: string | null;
-  openForm: boolean;
   expandedTasks: Record<string, boolean>;
 
+  infoTaskId: string | null;
+  menuTaskId: string | null;
+  menuAnchorEl: HTMLButtonElement | null;
+
+  setMenu: (id: string | null, anchor: HTMLButtonElement | null) => void;
+  closeMenu: () => void;
+  setInfoTaskId: (id: string | null) => void;
+  handleOpenInfo: (id: string) => void;
   setEditingTaskId: (id: string | null) => void;
   setTaskToDeleteId: (id: string | null) => void;
   setActiveParentId: (id: string | null) => void;
-  setOpenForm: (value: boolean) => void;
 
   toggleTask: (taskId: string) => void;
   handleDeleteRequest: (id: string) => void;
@@ -26,22 +32,16 @@ export const useTaskListStore = create<TaskListStore>((set) => ({
   activeParentId: null,
   openForm: false,
   expandedTasks: {},
+  infoTaskId: null,
+  menuTaskId: null,
+  menuAnchorEl: null,
 
   setEditingTaskId: (id) => set({ editingTaskId: id }),
   setTaskToDeleteId: (id) => set({ taskToDeleteId: id }),
   setActiveParentId: (id) => set({ activeParentId: id }),
-
-  setOpenForm: (value) =>
-    set(() =>
-      value
-        ? {
-            openForm: true,
-            editingTaskId: null,
-            taskToDeleteId: null,
-            activeParentId: null,
-          }
-        : { openForm: false },
-    ),
+  setInfoTaskId: (id) => set({ infoTaskId: id }),
+  setMenu: (id, anchor) => set({ menuTaskId: id, menuAnchorEl: anchor }),
+  closeMenu: () => set({ menuTaskId: null, menuAnchorEl: null }),
 
   toggleTask: (taskId) =>
     set((s) => ({
@@ -54,7 +54,7 @@ export const useTaskListStore = create<TaskListStore>((set) => ({
   handleDeleteRequest: (id) =>
     set({
       taskToDeleteId: id,
-      openForm: false,
+
       editingTaskId: null,
       activeParentId: null,
     }),
@@ -64,7 +64,6 @@ export const useTaskListStore = create<TaskListStore>((set) => ({
       editingTaskId: id,
       activeParentId: null,
       taskToDeleteId: null,
-      openForm: false,
     }),
 
   handleStartAddSubtask: (parentId) =>
@@ -72,7 +71,13 @@ export const useTaskListStore = create<TaskListStore>((set) => ({
       activeParentId: parentId,
       editingTaskId: null,
       taskToDeleteId: null,
-      openForm: false,
+    }),
+
+  handleOpenInfo: (id) =>
+    set({
+      infoTaskId: id,
+      editingTaskId: null,
+      activeParentId: null,
     }),
 
   resetForms: () =>
@@ -80,6 +85,9 @@ export const useTaskListStore = create<TaskListStore>((set) => ({
       editingTaskId: null,
       taskToDeleteId: null,
       activeParentId: null,
-      openForm: false,
+
+      infoTaskId: null,
+      menuTaskId: null,
+      menuAnchorEl: null,
     }),
 }));

@@ -19,7 +19,9 @@ export function MobileDrawer({
   return (
     <Drawer.Root
       open={open}
-      onOpenChange={onClose}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
       shouldScaleBackground
       nested={isNested}
     >

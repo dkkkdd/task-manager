@@ -1,11 +1,10 @@
 import { Trans, useTranslation } from "react-i18next";
 import type { TaskFormProps } from "./TaskForm";
 import { useTaskFormLogic } from "@/hooks/useTaskFormLogic";
-import { useEffect } from "react";
 import { MobileDrawer } from "@/features/MobileDrawer";
 import TaskFormFields from "./TaskFormFields";
 import TaskFormSubtasks from "./TaskFormSubtasks";
-import { ConfirmModal } from "@/components/ConfirmModal";
+import { ConfirmModal } from "@/components/ConfirmModal/ConfirmModal";
 import ModalPortal from "@/features/ModalPortal";
 
 export const TaskFormMobile = (props: TaskFormProps) => {
@@ -15,18 +14,16 @@ export const TaskFormMobile = (props: TaskFormProps) => {
     setFormData,
     handleSubmit,
     titleRef,
-    focusTitle,
+
     openConfirm,
     setOpenConfirm,
     deleteTask,
     isSubTask,
   } = useTaskFormLogic(props);
 
-  useEffect(() => focusTitle(props.openForm), [props.openForm]);
-
   return (
     <MobileDrawer
-      isNested={false}
+      isNested={true}
       open={props.openForm}
       onClose={props.onClose}
       drawerDescription="Create or edit tasks"

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { QuickBtn } from "@/components/QuickBtn";
+import { QuickBtn } from "@/components/Buttons/QuickBtn";
 import { format, isSameDay } from "date-fns";
 import { dateLocales } from "@/i18n";
 

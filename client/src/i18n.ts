@@ -3,15 +3,16 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
 import { registerLocale } from "react-datepicker";
-import { enUS } from "date-fns/locale";
+import { enUS, type Locale } from "date-fns/locale";
 
-// Реєстр для динамічно завантажених об'єктів локалей (для використання в компонентах)
-export const dateLocales: Record<string, any> = {
+export const dateLocales: Record<string, Locale> = {
   en: enUS,
 };
 
-// Карта функцій завантаження для Vite (Code Splitting)
-const loadLocale: Record<string, () => Promise<any>> = {
+const loadLocale: Record<
+  string,
+  () => Promise<{ default: Locale } | Record<string, Locale>>
+> = {
   uk: () => import("date-fns/locale/uk"),
   ru: () => import("date-fns/locale/ru"),
   es: () => import("date-fns/locale/es"),
@@ -27,10 +28,9 @@ export const registerDatePickerLocale = async (lang: string) => {
 
   try {
     const localeModule = await loader();
-
-    // date-fns v3/v4 використовує іменовані експорти, тому беремо перший доступний об'єкт
     const localeData =
-      (localeModule as any).default || Object.values(localeModule)[0];
+      (localeModule as { default: Locale }).default ||
+      (Object.values(localeModule)[0] as Locale);
 
     if (localeData) {
       dateLocales[lang] = localeData;
@@ -48,7 +48,6 @@ i18n
   .init({
     fallbackLng: "en",
     backend: {
-      // Шлях до ваших JSON файлів у папці public
       loadPath: "/locales/{{lng}}/translation.json",
     },
     detection: {
@@ -60,14 +59,12 @@ i18n
     },
   })
   .then(() => {
-    // Ініціалізація локалі при першому запуску
     if (i18n.language) {
       const lang = i18n.language.split("-")[0];
       registerDatePickerLocale(lang);
     }
   });
 
-// Слухач зміни мови
 i18n.on("languageChanged", (lng) => {
   const lang = lng.split("-")[0];
   registerDatePickerLocale(lang);

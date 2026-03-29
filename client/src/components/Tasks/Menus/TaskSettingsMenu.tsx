@@ -11,7 +11,7 @@ import {
   FloatingFocusManager,
 } from "@floating-ui/react";
 import { FILTER_OPTIONS } from "@/utils/userSettings";
-import { Select } from "@/components/Select";
+import Select from "@/components/Select";
 import { useModeStore } from "@/stores/useModesStore";
 import { useCallback, useState } from "react";
 

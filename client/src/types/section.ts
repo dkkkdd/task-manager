@@ -1,6 +1,6 @@
-export interface Section {
+export type Section = {
   id: string;
   title: string;
   order: number;
   projectId?: string | null;
-}
+};

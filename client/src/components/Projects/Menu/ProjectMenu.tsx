@@ -42,7 +42,12 @@ function ProjectMenu({
   const listRef = useRef<Array<HTMLButtonElement | null>>([]);
   const listLabelsRef = useRef<Array<string | null>>([]);
 
-  const { refs, floatingStyles, context, isPositioned } = useFloating({
+  const {
+    refs: { setFloating },
+    floatingStyles,
+    context,
+    isPositioned,
+  } = useFloating({
     open: Boolean(anchorEl),
     onOpenChange: (open) => !open && resetMenu(),
     elements: { reference: anchorEl },
@@ -95,7 +100,7 @@ function ProjectMenu({
       >
         <ul
           data-vaul-no-drag
-          ref={refs.setFloating}
+          ref={setFloating}
           style={{
             ...floatingStyles,
             zIndex: 2000,

@@ -1,4 +1,4 @@
-export interface Task {
+export type Task = {
   id: string;
   title: string;
   isDone: boolean;
@@ -11,7 +11,7 @@ export interface Task {
   subtasks?: Task[];
   sectionId?: string | null;
   _count?: { tasks: number };
-}
+};
 
 export type TaskFormData = {
   title: string;

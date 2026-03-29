@@ -35,7 +35,7 @@ interface SelectProps {
   position: Placement | undefined;
 }
 
-export function Select({
+function Select({
   symbol,
   value,
   options,
@@ -248,3 +248,5 @@ export function Select({
     </>
   );
 }
+
+export default Select;

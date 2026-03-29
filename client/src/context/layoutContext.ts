@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
 interface LayoutContextType {
-  scrollRef: React.RefObject<HTMLElement | null>;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 }

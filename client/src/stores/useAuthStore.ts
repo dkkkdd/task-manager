@@ -1,7 +1,22 @@
 import { create } from "zustand";
-// import { persist } from "zustand/middleware";
 import type { User } from "@/types/user";
 import { authApi } from "@/api/auth";
+
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+interface RegisterData {
+  email: string;
+  password: string;
+  userName: string;
+}
+
+interface UpdateUserData {
+  userName?: string;
+  email?: string;
+}
 
 interface AuthStore {
   user: User | null;
@@ -11,11 +26,11 @@ interface AuthStore {
 
   initAuth: () => Promise<void>;
   fetchUser: () => Promise<void>;
-  loginUser: (data: any) => Promise<void>;
-  registerUser: (data: any) => Promise<void>;
+  loginUser: (data: LoginData) => Promise<void>;
+  registerUser: (data: RegisterData) => Promise<void>;
   logoutUser: () => Promise<void>;
   deleteUser: () => Promise<void>;
-  updateUserInfo: (data: any) => Promise<void>;
+  updateUserInfo: (data: UpdateUserData) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({

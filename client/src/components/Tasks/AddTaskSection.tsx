@@ -1,5 +1,5 @@
 import { lazy, memo, useState } from "react";
-import { AddTaskBtn } from "../AddTaskBtn";
+import { AddTaskBtn } from "../Buttons/AddTaskBtn";
 const TaskForm = lazy(() => import("./TaskForm/TaskForm"));
 import { useIsMobile } from "@/hooks/useIsMobile";
 

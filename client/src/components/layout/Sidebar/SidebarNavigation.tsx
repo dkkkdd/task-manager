@@ -23,11 +23,7 @@ export const SidebarNavigation = ({
 
   return (
     <div
-      className={
-        isMobile
-          ? "flex h-14 w-full items-center justify-around"
-          : "flex flex-col gap-1"
-      }
+      className={isMobile ? "flex h-14 w-full items-center justify-around" : ""}
     >
       {items.map((nav) => {
         const isActive = mode === nav.id;

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import TaskFormFields from "./TaskFormFields";
 import { useTaskFormLogic } from "@/hooks/useTaskFormLogic";
 import type { TaskFormProps } from "./TaskForm";
@@ -9,11 +8,9 @@ export const TaskFormDesktop = (props: TaskFormProps) => {
     setFormData,
     handleSubmit,
     titleRef,
-    focusTitle,
+
     isSubTask,
   } = useTaskFormLogic(props);
-
-  useEffect(() => focusTitle(props.openForm), [props.openForm]);
 
   if (!props.openForm) return null;
 

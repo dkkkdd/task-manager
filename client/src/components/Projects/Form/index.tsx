@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { OPTIONS } from "@/utils/projectColor";
@@ -29,13 +29,6 @@ const ProjectForm = ({
   const [name, setName] = useState("");
   const [color, setColor] = useState(OPTIONS[0]?.value ?? "#8c8c8c");
 
-  useEffect(() => {
-    if (open) {
-      setName(initialProject?.title ?? "");
-      setColor(initialProject?.color ?? OPTIONS[0]?.value ?? "#8c8c8c");
-    }
-  }, [open, initialProject]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -47,7 +40,7 @@ const ProjectForm = ({
 
   const title = mode === "create" ? t("add_project") : t("edit_project");
   const children = (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} key={initialProject?.id || "new"}>
       <FormContent
         name={name}
         setName={setName}

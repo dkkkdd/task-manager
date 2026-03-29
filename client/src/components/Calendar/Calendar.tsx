@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -34,27 +34,26 @@ interface CalendarProps {
   children?: ReactNode;
 }
 
-export const Calendar = ({
-  date,
-  setDate,
-  setIsCalOpen,
-  children,
-}: CalendarProps) => {
+const Calendar = ({ date, setDate, setIsCalOpen, children }: CalendarProps) => {
   const isMobile = useIsMobile();
   const { t, i18n } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
+  // const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const dateObj = useMemo(() => (date ? new Date(date) : null), [date]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(() => {
+    if (!dateObj) return null;
+    const timeStr = dateObj.toTimeString().slice(0, 5);
+    return timeStr === "23:59" ? null : timeStr;
+  });
 
-  useEffect(() => {
-    if (open && dateObj) {
-      if (!date) setSelectedTime(null);
-      const timeStr = dateObj.toTimeString().slice(0, 5);
-      setSelectedTime(timeStr === "23:59" ? null : timeStr);
-    }
-  }, [open, dateObj, date]);
+  // useEffect(() => {
+  //   if (open && dateObj) {
+  //     if (!date) setSelectedTime(null);
+  //     const timeStr = dateObj.toTimeString().slice(0, 5);
+  //     setSelectedTime(timeStr === "23:59" ? null : timeStr);
+  //   }
+  // }, [open, dateObj, date]);
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
@@ -64,7 +63,12 @@ export const Calendar = ({
     [setIsCalOpen],
   );
 
-  const { refs, floatingStyles, context, isPositioned } = useFloating({
+  const {
+    refs: { setReference, setFloating },
+    floatingStyles,
+    context,
+    isPositioned,
+  } = useFloating({
     open,
     onOpenChange: handleOpenChange,
     placement: "left-end",
@@ -142,7 +146,7 @@ export const Calendar = ({
     <>
       {children ? (
         <div
-          ref={refs.setReference}
+          ref={setReference}
           {...getReferenceProps()}
           className="inline-flex"
         >
@@ -150,7 +154,7 @@ export const Calendar = ({
         </div>
       ) : (
         <button
-          ref={refs.setReference}
+          ref={setReference}
           {...getReferenceProps()}
           type="button"
           className="focus:outline-none cursor-pointer bg-transparent min-h-[38px] flex justify-between items-center gap-2 border-[0.5px] border-black/20 dark:border-[#d0d0d05a]/60 rounded px-3 h-[35px] w-fit text-sm hover:border-black/40 dark:hover:border-[#888]"
@@ -181,7 +185,7 @@ export const Calendar = ({
       {!isMobile && open && (
         <FloatingPortal>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={{
               ...floatingStyles,
               visibility: isPositioned ? "visible" : "hidden",
@@ -285,3 +289,4 @@ export const Calendar = ({
 };
 
 Calendar.displayName = "Calendar";
+export default Calendar;

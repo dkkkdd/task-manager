@@ -1,6 +1,6 @@
 import ModalPortal from "@/features/ModalPortal";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { ConfirmModal } from "@/components/ConfirmModal";
+import { ConfirmModal } from "@/components/ConfirmModal/ConfirmModal";
 import { UpdateUserInfo } from "@/components/User/UpdateUserInfo/UpdateUserInfo";
 import { UserInfoMobile } from "@/components/User/UserInfo/UserInfoMobile";
 import { UserInfoDesktop } from "@/components/User/UserInfo/UserInfoDesktop";

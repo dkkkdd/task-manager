@@ -1,8 +1,9 @@
+import { lazy } from "react";
 import { useModeStore } from "@/stores/useModesStore";
 import { useSelectionStore } from "@/stores/useSelectionStore";
 import { useTranslation } from "react-i18next";
-import { TaskListMenu } from "./Tasks/TaskListMenu";
-import TaskSettingsMenu from "./Tasks/TaskSettingsMenu";
+import { TaskListMenu } from "../Tasks/Menus/TaskListMenu";
+const TaskSettingsMenu = lazy(() => import("../Tasks/Menus/TaskSettingsMenu"));
 import { ProjectTitle } from "./ProjectTitle";
 import { useLayout } from "@/context/layoutContext";
 import { useIsMobile } from "@/hooks/useIsMobile";

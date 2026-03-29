@@ -1,6 +1,8 @@
 import TextareaAutosize from "react-textarea-autosize";
-import { Select } from "@/components/Select";
-import { Calendar } from "@/components/Calendar/Calendar";
+import { lazy } from "react";
+const Select = lazy(() => import("@/components/Select"));
+const Calendar = lazy(() => import("@/components/Calendar/Calendar"));
+
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
 import { useTranslation } from "react-i18next";
 import type { TaskFormData } from "@/types/tasks";

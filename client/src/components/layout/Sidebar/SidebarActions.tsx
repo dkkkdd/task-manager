@@ -1,6 +1,6 @@
 import { lazy, useState, Suspense } from "react";
-import { AddTaskBtn } from "@/components/AddTaskBtn";
-import { UserBtn } from "@/components/User/UserBtn";
+import { AddTaskBtn } from "@/components/Buttons/AddTaskBtn";
+import { UserBtn } from "@/components/Buttons/UserBtn";
 import ModalPortal from "@/features/ModalPortal";
 
 const TaskForm = lazy(() => import("@/components/Tasks/TaskForm/TaskForm"));

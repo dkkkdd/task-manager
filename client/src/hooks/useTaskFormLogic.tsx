@@ -28,10 +28,10 @@ export const useTaskFormLogic = ({
 
   const titleRef = useRef<HTMLInputElement>(null);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getEmptyState = useCallback((): TaskFormData => {
     let finalDeadline = null;
-
     if (mode === "today") {
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
@@ -69,16 +69,15 @@ export const useTaskFormLogic = ({
         setFormData(getEmptyState());
       }
 
-      setTimeout(() => titleRef.current?.focus(), 50);
+      setTimeout(() => titleRef.current?.focus(), 120);
     }
   }, [openForm, formMode, initiaTask, getEmptyState]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!formData.title?.trim() || isSubmitting) return;
 
-    if (!formData.title?.trim()) return;
-
+    setIsSubmitting(true);
     try {
       const finalDeadline = combineDateAndTime(
         formData.deadline,
@@ -88,7 +87,7 @@ export const useTaskFormLogic = ({
       const payload = {
         ...formData,
         deadline: finalDeadline,
-        parentId: initiaTask?.parentId || parentId || null,
+        parentId: formMode === "edit" ? initiaTask?.parentId : parentId || null,
       };
 
       if (formMode === "edit" && initiaTask?.id) {
@@ -97,16 +96,13 @@ export const useTaskFormLogic = ({
       } else {
         await createTask(payload);
         setFormData(getEmptyState());
-
         titleRef.current?.focus();
       }
     } catch (error) {
-      console.error("Failed to submit task:", error);
+      console.error("Form submission error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const focusTitle = (isOpen: boolean) => {
-    if (isOpen && titleRef.current) titleRef.current.focus();
   };
 
   return {
@@ -114,10 +110,10 @@ export const useTaskFormLogic = ({
     setFormData,
     handleSubmit,
     titleRef,
-    focusTitle,
     openConfirm,
     setOpenConfirm,
     deleteTask,
+    isSubmitting,
     isSubTask: Boolean(initiaTask?.parentId || parentId),
   };
 };

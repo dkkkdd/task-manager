@@ -6,7 +6,7 @@ import { useModeStore } from "@/stores/useModesStore";
 import ModalPortal from "@/features/ModalPortal";
 
 import ProjectMenu from "./ProjectMenu";
-import { ConfirmModal } from "@/components/ConfirmModal";
+import { ConfirmModal } from "@/components/ConfirmModal/ConfirmModal";
 import ProjectForm from "../Form";
 
 interface MenuState {

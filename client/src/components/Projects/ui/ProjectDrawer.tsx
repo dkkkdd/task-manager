@@ -1,7 +1,7 @@
 import ProjectCategory from "./ProjectCategory";
 import ShowProjectForm from "../Form/ShowProjectForm";
 import { useState } from "react";
-import { UserBtn } from "@/components/User/UserBtn";
+import { UserBtn } from "@/components/Buttons/UserBtn";
 import UserInfo from "@/components/User/UserInfo/UserInfo";
 
 const ProjectPage = () => {

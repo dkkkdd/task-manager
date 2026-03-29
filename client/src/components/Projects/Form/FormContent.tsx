@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Select } from "@/components/Select";
+import { lazy } from "react";
+const Select = lazy(() => import("@/components/Select"));
 import { OPTIONS } from "@/utils/projectColor";
 
 interface FormContentProps {

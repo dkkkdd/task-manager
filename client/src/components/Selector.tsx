@@ -1,40 +1,39 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PRIORITY_OPTIONS } from "@/utils/priorities";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { Select } from "@/components/Select";
-import { Calendar } from "@/components/Calendar/Calendar";
-import { ConfirmModal } from "@/components/ConfirmModal";
+import Select from "@/components/Select";
+import Calendar from "@/components/Calendar/Calendar";
+import { ConfirmModal } from "@/components/ConfirmModal/ConfirmModal";
 import { useProjectsStore } from "@/stores/useProjectsStore";
+import { useSelectionStore } from "@/stores/useSelectionStore";
+import { getAllIds } from "@/utils/getAllIds";
+import { useTasksStore } from "@/stores/useTasksStore";
+import { useModeStore } from "@/stores/useModesStore";
 
 type SelectorProps = {
   visible: boolean;
-  selectedIds: Set<string>;
   total: number;
-  toggleSelectAll: () => void;
-  onClear: () => void;
-  onComplete: () => void;
-  onDelete: () => void;
-  onUpdateProject: (val: string | null) => void;
-  onUpdateDeadline: (date: string | null, time: string | null) => void;
-  onSetPriority: (priority: number) => void;
 };
 
-export const Selector = ({
-  visible,
-  total,
-  selectedIds,
-  toggleSelectAll,
-  onClear,
-  onComplete,
-  onDelete,
-  onUpdateDeadline,
-  onUpdateProject,
-  onSetPriority,
-}: SelectorProps) => {
+const Selector = ({ visible, total }: SelectorProps) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const mode = useModeStore((s) => s.mode);
+  const selectedProjectId = useModeStore((s) => s.selectedProjectId);
   const projects = useProjectsStore((s) => s.projects);
+  const tasksCache = useTasksStore((s) => s.tasksCache);
+  const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
+  const tasks = tasksCache[cacheKey] || [];
+  const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const toggleSelectAll = useSelectionStore((s) => s.toggleSelectAll);
+  const bulkSetPriority = useSelectionStore((s) => s.bulkSetPriority);
+  const clearSelection = useSelectionStore((s) => s.clearSelection);
+  const bulkComplete = useSelectionStore((s) => s.bulkComplete);
+  const bulkDelete = useSelectionStore((s) => s.bulkDelete);
+  const bulkProjectChange = useSelectionStore((s) => s.bulkProjectChange);
+  const bulkUpdateDeadline = useSelectionStore((s) => s.bulkUpdateDeadline);
+  const allTaskIds = useMemo(() => getAllIds(tasks), [tasks]);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -65,7 +64,7 @@ export const Selector = ({
               {selectedIds.size}
             </div>
             <button
-              onClick={toggleSelectAll}
+              onClick={() => toggleSelectAll(allTaskIds)}
               className="text-[13px] font-medium text-black/60 dark:text-white/60 hover:text-blue-500 transition-colors"
             >
               {isAllSelected ? t("deselect_all") : t("select_all")}
@@ -73,7 +72,7 @@ export const Selector = ({
           </div>
 
           <button
-            onClick={onClear}
+            onClick={clearSelection}
             className="text-[13px] font-semibold text-blue-500 hover:opacity-70 transition-opacity"
           >
             {t("cancel")}
@@ -89,7 +88,7 @@ export const Selector = ({
         >
           <div className="flex items-center gap-1">
             <button
-              onClick={onComplete}
+              onClick={bulkComplete}
               className="group h-10 w-10 flex items-center justify-center rounded-xl hover:bg-emerald-500/10 transition-all"
               title={t("complete")}
             >
@@ -117,12 +116,12 @@ export const Selector = ({
                 ...o,
                 label: t(o.label.toLowerCase()),
               }))}
-              onChange={(p) => onSetPriority(Number(p))}
+              onChange={(p) => bulkSetPriority(Number(p))}
             />
 
             <Calendar
               date={null}
-              setDate={(date) => onUpdateDeadline(date, null)}
+              setDate={(date) => bulkUpdateDeadline(date, null)}
             />
 
             <Select
@@ -140,7 +139,7 @@ export const Selector = ({
                 })),
               ]}
               onChange={(val) => {
-                onUpdateProject(val as string | null);
+                bulkProjectChange(val as string | null);
               }}
             />
           </div>
@@ -153,7 +152,7 @@ export const Selector = ({
           confirmText={t("delete_now")}
           message={t("delete_tasks_message", { count: selectedIds.size })}
           onConfirm={() => {
-            onDelete();
+            bulkDelete();
             setConfirmDelete(false);
           }}
           onClose={() => setConfirmDelete(false)}
@@ -162,3 +161,5 @@ export const Selector = ({
     </>
   );
 };
+
+export default Selector;

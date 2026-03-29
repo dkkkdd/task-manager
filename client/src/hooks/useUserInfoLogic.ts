@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { applyTheme } from "@/utils/userSettings";
 import { formatUserDate } from "@/utils/userHelpers";
@@ -21,17 +21,12 @@ export const useUserInfoLogic = () => {
     fetchUser();
   }, [fetchUser]);
 
-  const { timeAgo, formattedDate } = useMemo(
-    () =>
-      user?.createdAt
-        ? {
-            timeAgo: formatUserDate(user.createdAt, i18n.language).timeAgo,
-            formattedDate: formatUserDate(user.createdAt, i18n.language)
-              .fullDate,
-          }
-        : { timeAgo: "", formattedDate: "" },
-    [user?.createdAt, i18n.language],
-  );
+  const { timeAgo, formattedDate } = user?.createdAt
+    ? {
+        timeAgo: formatUserDate(user.createdAt, i18n.language).timeAgo,
+        formattedDate: formatUserDate(user.createdAt, i18n.language).fullDate,
+      }
+    : { timeAgo: "", formattedDate: "" };
 
   const handleThemeChange = (newTheme: string | number | null) => {
     if (typeof newTheme === "string") {

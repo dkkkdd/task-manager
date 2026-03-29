@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserInfoBaseProps } from "@/types/userInfo";
 import { THEME_OPTIONS, LANG_OPTIONS } from "@/utils/userSettings";
-import { Select } from "@/components/Select";
+import Select from "@/components/Select";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export const UserInfoBase = ({
@@ -17,7 +17,7 @@ export const UserInfoBase = ({
   handleLangChange,
 }: UserInfoBaseProps) => {
   const user = useAuthStore((s) => s.user);
-  const isSyncing = useAuthStore((s) => s.isSyncing);
+
   const { t, i18n } = useTranslation();
 
   const themeOptions = useMemo(
@@ -27,14 +27,6 @@ export const UserInfoBase = ({
         label: t(opt.label),
       })),
     [t],
-  );
-
-  const CountDisplay = ({ count }: { count: number }) => (
-    <span
-      className={`text-xl font-bold text-black dark:text-white transition-opacity ${isSyncing ? "opacity-30 animate-pulse" : "opacity-100"}`}
-    >
-      {isSyncing ? "--" : count}
-    </span>
   );
 
   if (!user) return null;
@@ -143,5 +135,16 @@ export const UserInfoBase = ({
         </div>
       </div>
     </>
+  );
+};
+
+const CountDisplay = ({ count }: { count: number }) => {
+  const isSyncing = useAuthStore((s) => s.isSyncing);
+  return (
+    <span
+      className={`text-xl font-bold text-black dark:text-white transition-opacity ${isSyncing ? "opacity-30 animate-pulse" : "opacity-100"}`}
+    >
+      {isSyncing ? "--" : count}
+    </span>
   );
 };

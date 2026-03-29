@@ -18,7 +18,12 @@ export const UpdateUserInfoDesktop = ({
   onClose,
   anchorRef,
 }: UpdateUserInfoProps) => {
-  const { refs, floatingStyles, context, isPositioned } = useFloating({
+  const {
+    refs: { setReference, setFloating },
+    floatingStyles,
+    context,
+    isPositioned,
+  } = useFloating({
     open: isOpen,
     onOpenChange: (open) => !open && onClose(),
     whileElementsMounted: autoUpdate,
@@ -27,8 +32,8 @@ export const UpdateUserInfoDesktop = ({
   });
 
   useEffect(() => {
-    if (anchorRef.current) refs.setReference(anchorRef.current);
-  }, [anchorRef, refs]);
+    if (anchorRef.current) setReference(anchorRef.current);
+  }, [anchorRef, setFloating, setReference]);
 
   const { getFloatingProps } = useInteractions([
     useDismiss(context),
@@ -41,7 +46,7 @@ export const UpdateUserInfoDesktop = ({
     <FloatingPortal>
       <FloatingFocusManager context={context} modal={false}>
         <div
-          ref={refs.setFloating}
+          ref={setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           className={`z-[2000] transition-opacity duration-200 ${isPositioned ? "opacity-100" : "opacity-0"}`}

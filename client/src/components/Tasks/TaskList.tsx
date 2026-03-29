@@ -1,29 +1,18 @@
-import DeleteConfirmWrapper from "../DeleteConfirmWrapper";
-import RenderTaskItem from "./RenderTaskCard";
+import { lazy, useEffect, useState } from "react";
 import { AddTaskSection } from "./AddTaskSection";
-import { EmptyState } from "@/components/EmptyPage";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { AppHeader } from "../AppHeader";
+import { EmptyState } from "@/components/Tasks/EmptyState";
+import { AppHeader } from "../Header/AppHeader";
 import { useModeStore } from "@/stores/useModesStore";
 import { useTasksStore } from "@/stores/useTasksStore";
-import { ProjectTitle } from "../ProjectTitle";
+import { ProjectTitle } from "../Header/ProjectTitle";
+import VirtualList from "./VirtualList";
 import { useLayout } from "@/context/layoutContext";
-import { Selector } from "../Selector";
+const Selector = lazy(() => import("../Selector"));
 import { useSelectionStore } from "@/stores/useSelectionStore";
-import type { Task } from "@/types/tasks";
-const getAllIds = (tasks: Task[]): string[] => {
-  let ids: string[] = [];
-  tasks.forEach((task) => {
-    ids.push(task.id);
-    if (task.subtasks && task.subtasks.length > 0) {
-      ids = [...ids, ...getAllIds(task.subtasks)];
-    }
-  });
-  return ids;
-};
+import { TaskListModals } from "../../features/GlobalModals";
+
 export const TaskList = () => {
   const mode = useModeStore((s) => s.mode);
-
   const selectedProjectId = useModeStore((s) => s.selectedProjectId);
 
   const loading = useTasksStore((s) => s.loading);
@@ -31,82 +20,44 @@ export const TaskList = () => {
   const cacheKey = mode === "project" ? `project-${selectedProjectId}` : mode;
   const tasks = tasksCache[cacheKey] || [];
   const selectionMode = useSelectionStore((s) => s.selectionMode);
-  const selectedIds = useSelectionStore((s) => s.selectedIds);
-  const toggleSelectAll = useSelectionStore((s) => s.toggleSelectAll);
-  const bulkSetPriority = useSelectionStore((s) => s.bulkSetPriority);
-  const clearSelection = useSelectionStore((s) => s.clearSelection);
-  const bulkComplete = useSelectionStore((s) => s.bulkComplete);
-  const bulkDelete = useSelectionStore((s) => s.bulkDelete);
-  const bulkProjectChange = useSelectionStore((s) => s.bulkProjectChange);
-  console.log(tasksCache);
-  const bulkUpdateDeadline = useSelectionStore((s) => s.bulkUpdateDeadline);
-  const allTaskIds = getAllIds(tasks);
 
   const { scrollRef } = useLayout();
+  const [scroll, setScroll] = useState(false);
 
-  const virtualizer = useVirtualizer({
-    count: tasks.length,
-    getScrollElement: () => scrollRef?.current ?? null,
-    estimateSize: () => 60,
-    measureElement: (el) => {
-      const height = el.getBoundingClientRect().height;
-      return Math.max(height, 20);
-    },
-    getItemKey: (index) => tasks[index]?.id ?? index,
-    overscan: 10,
-  });
-  const scroll = scrollRef?.current
-    ? scrollRef?.current?.scrollTop > 25
-    : false;
+  useEffect(() => {
+    const handle = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+
+      const next = el.scrollTop > 25;
+      setScroll((prev) => (prev !== next ? next : prev));
+    };
+
+    const el = scrollRef.current;
+    if (!el) return;
+
+    handle();
+
+    el.addEventListener("scroll", handle);
+    return () => el.removeEventListener("scroll", handle);
+  }, [scrollRef]);
 
   return (
     <>
       <AppHeader scroll={scroll} />
-
-      <Selector
-        visible={selectionMode}
-        total={tasks.length}
-        selectedIds={selectedIds}
-        toggleSelectAll={() => toggleSelectAll(allTaskIds)}
-        onClear={clearSelection}
-        onComplete={bulkComplete}
-        onDelete={bulkDelete}
-        onUpdateProject={bulkProjectChange}
-        onUpdateDeadline={bulkUpdateDeadline}
-        onSetPriority={bulkSetPriority}
-      />
-
+      <Selector visible={selectionMode} total={tasks.length} />
       <ProjectTitle scroll={scroll} variant="page" />
-      <div
-        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
-        className="w-full max-w-[50rem] mx-auto "
-      >
-        {virtualizer.getVirtualItems().map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            ref={virtualizer.measureElement}
-            data-index={virtualItem.index}
-            style={{
-              padding: "0 1em 0 1em",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            <RenderTaskItem task={tasks[virtualItem.index]} />
+      <VirtualList tasks={tasks} />
+      {tasks.length > 0 &&
+        mode !== "completed" &&
+        mode !== "overdue" &&
+        !selectionMode && (
+          <div className="w-full max-w-[50rem] px-[25px] mx-auto my-2">
+            <AddTaskSection />
           </div>
-        ))}
-      </div>
-
-      {tasks.length > 0 && mode !== "completed" && mode !== "overdue" && (
-        <div className="w-full max-w-[50rem] px-[25px] mx-auto my-2">
-          <AddTaskSection />
-        </div>
-      )}
+        )}
       <div className="pb-20" />
-      <DeleteConfirmWrapper />
+      <TaskListModals />
       {tasks.length === 0 && !loading && <EmptyState />}
     </>
   );

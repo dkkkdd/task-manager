@@ -2,24 +2,7 @@ import { create } from "zustand";
 import { useTaskListStore } from "./useTaskListStore";
 import type { TaskMode } from "@/types/navigation";
 import { useSelectionStore } from "./useSelectionStore";
-
-function getModeFromPath(): {
-  mode: TaskMode;
-  selectedProjectId: string | null;
-} {
-  const path = window.location.pathname;
-
-  if (path.startsWith("/project/")) {
-    return { mode: "project", selectedProjectId: path.split("/project/")[1] };
-  }
-  if (path === "/today") return { mode: "today", selectedProjectId: null };
-  if (path === "/completed")
-    return { mode: "completed", selectedProjectId: null };
-  if (path === "/overdue") return { mode: "overdue", selectedProjectId: null };
-  if (path === "/projects")
-    return { mode: "projects", selectedProjectId: null };
-  return { mode: "inbox", selectedProjectId: null };
-}
+import { getModeFromPath } from "@/utils/navigation";
 
 interface ModeStore {
   mode: TaskMode;
@@ -72,16 +55,7 @@ export const useModeStore = create<ModeStore>((set, get) => ({
 
   setShowDone: (val) => {
     localStorage.setItem("showDone", String(val));
-    //   if (!val) {
 
-    //   useTaskListStore.setState((state) => {
-    //     const newCache = { ...state.tasksCache };
-    //     Object.keys(newCache).forEach(key => {
-    //       newCache[key] = newCache[key].filter(t => !t.completed);
-    //     });
-    //     return { tasksCache: newCache };
-    //   });
-    // }
     set({ showDone: val });
   },
 }));
