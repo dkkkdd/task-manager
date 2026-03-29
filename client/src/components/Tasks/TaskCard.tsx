@@ -4,7 +4,7 @@ import type { Project } from "@/types/project";
 
 import { SubtaskToggle } from "./SubtaskToggle";
 import { TaskCheckbox } from "./TaskCheckbox";
-import { TaskMetadata } from "./TaskMetadata";
+import { TaskMetadata } from "./TaskMetadata.tsx";
 import { TaskActions } from "./TaskActions";
 
 interface TaskCardProps {
