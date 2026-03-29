@@ -2,10 +2,10 @@ import { memo } from "react";
 import type { Task } from "@/types/tasks";
 import type { Project } from "@/types/project";
 
-import { SubtaskToggle } from "@/components/Tasks/Subtasktoggle";
-import { TaskCheckbox } from "@/components/Tasks/TaskCheckbox";
-import { TaskMetadata } from "@/components/Tasks/TaskMetadata";
-import { TaskActions } from "@/components/Tasks/Taskactions";
+import { SubtaskToggle } from "./SubtaskToggle";
+import { TaskCheckbox } from "./TaskCheckbox";
+import { TaskMetadata } from "./TaskMetadata";
+import { TaskActions } from "./TaskActions";
 
 interface TaskCardProps {
   task: Task;
