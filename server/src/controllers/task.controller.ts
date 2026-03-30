@@ -165,17 +165,35 @@ export const updateTask = async (
   try {
     const userId = request.userId;
     const { id: taskId } = request.params;
-
     const data = request.body;
-    const updateData: Prisma.TaskUpdateInput = { ...data };
 
-    if (data.deadline) {
-      updateData.deadline = new Date(data.deadline);
+    const updateData: Prisma.TaskUpdateInput = {};
+
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.comment !== undefined) updateData.comment = data.comment ?? null;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+
+    if (data.deadline !== undefined) {
+      updateData.deadline = data.deadline ? new Date(data.deadline) : null;
     }
 
     if (data.isDone !== undefined) {
+      updateData.isDone = data.isDone;
       updateData.completedAt = data.isDone ? new Date() : null;
     }
+
+    if (data.projectId !== undefined) {
+      updateData.project = data.projectId
+        ? { connect: { id: data.projectId } }
+        : { disconnect: true };
+    }
+
+    if (data.sectionId !== undefined) {
+      updateData.section = data.sectionId
+        ? { connect: { id: data.sectionId } }
+        : { disconnect: true };
+    }
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId, userId },
       data: updateData,
