@@ -15,10 +15,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
 function setAuthCookie(reply: FastifyReply, token: string) {
   reply.setCookie("accessToken", token, {
     httpOnly: true,
-    // secure: true,
-    // sameSite: "none",
-    sameSite: "lax",
-    secure: false,
+    secure: true,
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/",
   });
@@ -184,10 +182,8 @@ export async function deleteAcc(request: FastifyRequest, reply: FastifyReply) {
 export async function logout(_request: FastifyRequest, reply: FastifyReply) {
   reply.clearCookie("accessToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    //secure: true,
-    //sameSite: "none",
+    secure: true,
+    sameSite: "none",
     path: "/",
   });
 
