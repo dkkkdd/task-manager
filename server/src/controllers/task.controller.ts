@@ -104,11 +104,16 @@ export const createTask = async (
       projectId,
     } = request.body;
 
+    const cleanProjectId = projectId && projectId !== "" ? projectId : null;
+    const cleanSectionId = sectionId && sectionId !== "" ? sectionId : null;
+    const cleanParentId = parentId && parentId !== "" ? parentId : null;
+
     const lastTask = await prisma.task.findFirst({
       where: {
         userId,
-        sectionId: sectionId ?? null,
-        parentId: parentId ?? null,
+        projectId: cleanProjectId,
+        sectionId: cleanSectionId,
+        parentId: cleanParentId,
       },
       orderBy: { order: "desc" },
     });
@@ -119,15 +124,13 @@ export const createTask = async (
       data: {
         title,
         userId,
-        projectId: projectId ?? null,
-        sectionId: sectionId ?? null,
-        parentId: parentId ?? null,
-
-        comment: comment ?? null,
+        projectId: cleanProjectId,
+        sectionId: cleanSectionId,
+        parentId: cleanParentId,
+        comment: comment || null,
         isDone,
         priority: Number(priority) || 1,
         order: nextOrder,
-
         deadline: deadline ? new Date(deadline) : null,
       },
     });
@@ -139,14 +142,15 @@ export const createTask = async (
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2003") {
         return reply.code(400).send({
-          error: "Неверный foreign key (projectId/sectionId/parentId)",
+          error:
+            "Invalid foreign key (projectId/sectionId/parentId). Ensure that these IDs exist.",
         });
       }
     }
 
     return reply.code(500).send({
       error: "Failed to create task",
-      details: error.message || String(error),
+      details: error.message,
     });
   }
 };
