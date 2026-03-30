@@ -40,8 +40,8 @@ model Section {
   id        String   @id @default(cuid())
   title     String
   order     Float    @default(0)
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -53,33 +53,35 @@ model Section {
 }
 
 model Task {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
-  
-  isDone      Boolean   @default(false)
-  order       Float     @default(0)
+
+  isDone      Boolean  @default(false)
+  order       Float    @default(0)
   comment     String?
-  priority    Int       @default(1)
-  createdAt   DateTime  @default(now())
+  priority    Int      @default(1)
+
+  createdAt   DateTime @default(now())
   completedAt DateTime?
   deadline    DateTime?
   reminderAt  String?
 
+
   parentId    String?
-  parent      Task?     @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
-  subtasks    Task[]    @relation("Subtasks")
+  projectId   String?
+  sectionId   String?
+
+  parent      Task?    @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks    Task[]   @relation("Subtasks")
 
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  projectId   String?
-  project     Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  section     Section? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
-  sectionId   String?
-  section     Section?  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@index([userId, projectId]) 
-  @@index([userId, deadline]) 
+  @@index([userId, projectId])
+  @@index([userId, deadline])
   @@index([sectionId, order])
   @@index([parentId])
 }

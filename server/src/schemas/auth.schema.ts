@@ -1,23 +1,20 @@
-import { z } from "zod";
+import { Type } from "@sinclair/typebox";
 
-export const CreateUserSchema = z.object({
-  userName: z
-    .string()
-    .min(3, "errors.title_required")
-    .max(30, "errors.title_too_long"),
-  email: z
-    .string()
-    .email()
-    .transform((v) => v.toLowerCase()),
-  password: z.string().min(8, "errors.password_too_short"),
+export const CreateUserSchema = Type.Object({
+  userName: Type.String({ minLength: 3, maxLength: 30 }),
+  email: Type.String({ format: "email" }),
+  password: Type.String({ minLength: 8 }),
 });
 
-export const LoginUserSchema = z.object({
-  email: z
-    .string()
-    .email()
-    .transform((v) => v.toLowerCase()),
-  password: z.string(),
+export const LoginUserSchema = Type.Object({
+  email: Type.String({ format: "email" }),
+  password: Type.String(),
 });
 
-export const UpdateUserSchema = CreateUserSchema.partial();
+export const UserResponseSchema = Type.Object({
+  id: Type.String(),
+  email: Type.String(),
+  userName: Type.String(),
+});
+
+export const UpdateUserSchema = Type.Partial(CreateUserSchema);

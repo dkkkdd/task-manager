@@ -8,33 +8,36 @@ import {
   CreateUserSchema,
   LoginUserSchema,
 } from "../schemas/auth.schema";
+import { Static } from "@sinclair/typebox";
 
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key";
 
 function setAuthCookie(reply: FastifyReply, token: string) {
   reply.setCookie("accessToken", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    // secure: true,
+    // sameSite: "none",
+    sameSite: "lax",
+    secure: false,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/",
   });
 }
 
-export async function register(request: FastifyRequest, reply: FastifyReply) {
-  const validation = CreateUserSchema.safeParse(request.body);
-  if (!validation.success) {
-    return reply.code(400).send({ error: validation.error.format() });
-  }
+export async function register(
+  request: FastifyRequest<{ Body: Static<typeof CreateUserSchema> }>,
+  reply: FastifyReply,
+) {
+  const { userName, password, email } = request.body;
 
-  const { userName, password, email } = validation.data;
+  const normalizedEmail = email.toLowerCase();
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     const user = await prisma.user.create({
       data: {
-        userName: userName || email.split("@")[0],
-        email,
+        userName: userName || normalizedEmail.split("@")[0],
+        email: normalizedEmail,
         passwordHash: hashedPassword,
       },
       include: {
@@ -45,6 +48,7 @@ export async function register(request: FastifyRequest, reply: FastifyReply) {
     });
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+
     setAuthCookie(reply, token);
 
     return reply.code(201).send({
@@ -56,6 +60,8 @@ export async function register(request: FastifyRequest, reply: FastifyReply) {
       },
     });
   } catch (error) {
+    request.log.error(error);
+
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         return reply.code(400).send({ error: "User already exists" });
@@ -94,17 +100,15 @@ export async function getMe(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-export async function login(request: FastifyRequest, reply: FastifyReply) {
-  const validation = LoginUserSchema.safeParse(request.body);
-  if (!validation.success) {
-    return reply.code(400).send({ error: validation.error.format() });
-  }
-
-  const { password, email } = validation.data;
-
+export async function login(
+  request: FastifyRequest<{ Body: Static<typeof LoginUserSchema> }>,
+  reply: FastifyReply,
+) {
+  const { password, email } = request.body;
+  const normalizedEmail = email.toLowerCase();
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       include: {
         _count: {
           select: { projects: true, tasks: true },
@@ -132,22 +136,20 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-export async function updateMe(request: FastifyRequest, reply: FastifyReply) {
+export async function updateMe(
+  request: FastifyRequest<{ Body: Static<typeof UpdateUserSchema> }>,
+  reply: FastifyReply,
+) {
   const userId = request.userId;
-  const validation = UpdateUserSchema.safeParse(request.body);
+  const { userName, email } = request.body;
 
-  if (!validation.success) {
-    return reply.code(400).send({ error: validation.error.format() });
-  }
-
-  const { userName, email } = validation.data;
-
+  const normalizedEmail = email?.toLowerCase();
   try {
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
         ...(userName !== undefined && { userName }),
-        ...(email !== undefined && { email }),
+        ...(normalizedEmail !== undefined && { email: normalizedEmail }),
       },
       select: {
         id: true,
@@ -182,8 +184,10 @@ export async function deleteAcc(request: FastifyRequest, reply: FastifyReply) {
 export async function logout(_request: FastifyRequest, reply: FastifyReply) {
   reply.clearCookie("accessToken", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: false,
+    sameSite: "lax",
+    //secure: true,
+    //sameSite: "none",
     path: "/",
   });
 

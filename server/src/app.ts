@@ -1,16 +1,22 @@
 import fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
-import authRoutes from "./routes/auth.routes";
-import projectRoutes from "./routes/project.routes";
-import taskRoutes from "./routes/task.routes";
-import sectionRoutes from "./routes/section.routes";
-import { authMiddleware } from "./middleware/auth";
+import swaggerPlugin from "./plugins/swagger";
+import routesPlugin from "./plugins/routes";
+
+import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 
 export const app = fastify({
   logger: true,
   trustProxy: true,
-});
+  ajv: {
+    customOptions: {
+      allErrors: true,
+      strict: false,
+    },
+    plugins: [require("ajv-errors")],
+  },
+}).withTypeProvider<TypeBoxTypeProvider>();
 
 app.register(cors, {
   origin: [
@@ -23,16 +29,7 @@ app.register(cors, {
   allowedHeaders: ["Content-Type", "Authorization"],
 });
 
+app.register(swaggerPlugin);
+
 app.register(cookie);
-app.register(authRoutes, { prefix: "/api/auth" });
-
-app.register(
-  async (instance) => {
-    instance.addHook("preHandler", authMiddleware);
-
-    instance.register(projectRoutes, { prefix: "/projects" });
-    instance.register(taskRoutes, { prefix: "/tasks" });
-    instance.register(sectionRoutes, { prefix: "/sections" });
-  },
-  { prefix: "/api" },
-);
+app.register(routesPlugin);

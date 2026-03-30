@@ -5,24 +5,20 @@ import {
   UpdateSectionSchema,
   CreateSectionSchema,
 } from "../schemas/section.schema";
+import { Static } from "@sinclair/typebox";
 
 interface SectionParams {
   id: string;
 }
 
 export const createSection = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: Static<typeof CreateSectionSchema> }>,
   reply: FastifyReply,
 ) => {
   try {
-    const validation = CreateSectionSchema.safeParse(request.body);
-    if (!validation.success) {
-      return reply.code(400).send({ error: validation.error.format() });
-    }
-    const { title, projectId, order } = validation.data;
+    const { title, projectId, order } = request.body;
     const userId = request.userId;
 
-    if (!userId) return reply.code(401).send({ error: "Unauthorized" });
     if (!title) return reply.code(400).send({ error: "Title is required" });
     if (!projectId)
       return reply.code(400).send({ error: "Project id is required" });
@@ -51,20 +47,17 @@ export const createSection = async (
 };
 
 export const updateSection = async (
-  request: FastifyRequest<{ Params: SectionParams }>,
+  request: FastifyRequest<{
+    Params: SectionParams;
+    Body: Static<typeof UpdateSectionSchema>;
+  }>,
   reply: FastifyReply,
 ) => {
   try {
     const userId = request.userId;
     const { id } = request.params;
 
-    const validation = UpdateSectionSchema.safeParse(request.body);
-    if (!validation.success) {
-      return reply.code(400).send({ error: validation.error.format() });
-    }
-
-    const { title, order } = validation.data;
-    if (!userId) return reply.code(401).send({ error: "Unauthorized" });
+    const { title, order } = request.body;
 
     const section = await prisma.section.findFirst({
       where: { id, project: { userId } },
@@ -93,29 +86,23 @@ export const deleteSection = async (
   request: FastifyRequest<{ Params: SectionParams }>,
   reply: FastifyReply,
 ) => {
-  try {
-    const userId = request.userId;
-    const { id } = request.params;
+  const userId = request.userId;
+  const { id } = request.params;
 
-    const section = await prisma.section.findFirst({
-      where: { id, project: { userId } },
+  try {
+    const result = await prisma.section.deleteMany({
+      where: {
+        id,
+        project: { userId },
+      },
     });
 
-    if (!section) {
+    if (result.count === 0) {
       return reply.code(404).send({ error: "Section not found" });
     }
 
-    await prisma.section.delete({
-      where: { id, userId },
-    });
-
     return reply.code(204).send();
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return reply.code(404).send({ error: "Section not found" });
-      }
-    }
     request.log.error(error);
     return reply.code(500).send({ error: "Failed to delete section" });
   }

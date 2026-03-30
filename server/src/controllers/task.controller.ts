@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../prisma";
 import { UpdateTaskSchema, CreateTaskSchema } from "../schemas/task.schema";
 import { Prisma } from "@prisma/client";
+import { Static } from "@sinclair/typebox";
 
 type TaskQuery = {
   projectId?: string;
@@ -86,26 +87,22 @@ export const getTasks = async (
 };
 
 export const createTask = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: Static<typeof CreateTaskSchema> }>,
   reply: FastifyReply,
 ) => {
   try {
     const userId = request.userId;
-    const validation = CreateTaskSchema.safeParse(request.body);
 
-    if (!validation.success) {
-      return reply.code(400).send({ error: validation.error.format() });
-    }
     const {
       title,
-      projectId,
+      comment,
+      isDone = false,
+      deadline,
+      priority = 1,
       sectionId,
       parentId,
-      comment,
-      deadline,
-      priority,
-      reminderAt,
-    } = validation.data;
+      projectId,
+    } = request.body;
 
     const lastTask = await prisma.task.findFirst({
       where: {
@@ -122,41 +119,50 @@ export const createTask = async (
       data: {
         title,
         userId,
-
         projectId: projectId ?? null,
         sectionId: sectionId ?? null,
         parentId: parentId ?? null,
 
         comment: comment ?? null,
+        isDone,
         priority: Number(priority) || 1,
         order: nextOrder,
 
         deadline: deadline ? new Date(deadline) : null,
-
-        reminderAt: reminderAt ?? null,
       },
     });
 
     return reply.code(201).send(task);
-  } catch (error) {
+  } catch (error: any) {
     request.log.error(error);
-    return reply.code(500).send({ error: "Failed to create task" });
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        return reply.code(400).send({
+          error: "Неверный foreign key (projectId/sectionId/parentId)",
+        });
+      }
+    }
+
+    return reply.code(500).send({
+      error: "Failed to create task",
+      details: error.message || String(error),
+    });
   }
 };
 
 export const updateTask = async (
-  request: FastifyRequest<{ Params: TaskParams }>,
+  request: FastifyRequest<{
+    Params: TaskParams;
+    Body: Static<typeof UpdateTaskSchema>;
+  }>,
   reply: FastifyReply,
 ) => {
   try {
     const userId = request.userId;
     const { id: taskId } = request.params;
 
-    const validation = UpdateTaskSchema.safeParse(request.body);
-    if (!validation.success) {
-      return reply.code(400).send({ error: validation.error.format() });
-    }
-    const data = validation.data;
+    const data = request.body;
     const updateData: Prisma.TaskUpdateInput = { ...data };
 
     if (data.deadline) {

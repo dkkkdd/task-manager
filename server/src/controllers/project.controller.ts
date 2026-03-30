@@ -5,6 +5,7 @@ import {
   UpdateProjectSchema,
   CreateProjectSchema,
 } from "../schemas/project.schema";
+import { Static } from "@sinclair/typebox";
 
 export const getProjects = async (
   request: FastifyRequest,
@@ -29,16 +30,12 @@ export const getProjects = async (
 };
 
 export const createProject = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: Static<typeof CreateProjectSchema> }>,
   reply: FastifyReply,
 ) => {
   const userId = request.userId;
 
-  const validation = CreateProjectSchema.safeParse(request.body);
-  if (!validation.success) {
-    return reply.code(400).send({ error: validation.error.format() });
-  }
-  const { title, color, favorites, order } = validation.data;
+  const { title, color, favorites, order } = request.body;
 
   try {
     const project = await prisma.project.create({
@@ -58,19 +55,16 @@ export const createProject = async (
 };
 
 export const updateProject = async (
-  request: FastifyRequest<{ Params: { id: string } }>,
+  request: FastifyRequest<{
+    Params: { id: string };
+    Body: Static<typeof UpdateProjectSchema>;
+  }>,
   reply: FastifyReply,
 ) => {
   const userId = request.userId;
-
   const { id } = request.params;
 
-  const validation = UpdateProjectSchema.safeParse(request.body);
-  if (!validation.success) {
-    return reply.code(400).send({ error: validation.error.format() });
-  }
-
-  const data = validation.data;
+  const data = request.body;
 
   try {
     const updated = await prisma.project.update({

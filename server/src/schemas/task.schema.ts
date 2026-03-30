@@ -1,20 +1,46 @@
-import { z } from "zod";
+import { Type, Static } from "@sinclair/typebox";
 
-export const CreateTaskSchema = z.object({
-  title: z
-    .string()
-    .min(1, "errors.title_required")
-    .max(170, "errors.title_too_long"),
-  comment: z.string().optional().nullable(),
-  isDone: z.boolean().optional(),
-  deadline: z.coerce.date().optional().nullable(),
-  priority: z.number().optional(),
-  reminderAt: z.string().optional().nullable(),
-  projectId: z.string().optional().nullable(),
-  sectionId: z.string().optional().nullable(),
-  parentId: z.string().optional().nullable(),
+export const CreateTaskSchema = Type.Object({
+  title: Type.String({
+    minLength: 1,
+    maxLength: 170,
+    errorMessage: { minLength: "errors.title_required" },
+  }),
+  comment: Type.Optional(Type.String()),
+  isDone: Type.Optional(Type.Boolean({ default: false })),
+  deadline: Type.Optional(
+    Type.Union([Type.String({ format: "date-time" }), Type.Null()]),
+  ),
+  priority: Type.Optional(
+    Type.Number({
+      default: 1,
+      minimum: 1,
+      maximum: 4,
+      errorMessage: {
+        minimum: "errors.priority_min",
+        maximum: "errors.priority_max",
+      },
+    }),
+  ),
+  sectionId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  parentId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  projectId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  order: Type.Optional(Type.Number({ default: 0 })),
 });
-export const UpdateTaskSchema = CreateTaskSchema.partial();
 
-export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
-export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
+export const TaskResponseSchema = Type.Object({
+  id: Type.String(),
+  title: Type.String(),
+  comment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  isDone: Type.Boolean(),
+  deadline: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  priority: Type.Number(),
+  sectionId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  parentId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  projectId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  order: Type.Number(),
+  userId: Type.String(),
+  createdAt: Type.String(),
+});
+
+export const UpdateTaskSchema = Type.Partial(CreateTaskSchema);

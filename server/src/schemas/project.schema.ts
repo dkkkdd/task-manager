@@ -1,16 +1,22 @@
-import { z } from "zod";
-
-export const CreateProjectSchema = z.object({
-  title: z
-    .string()
-    .min(1, "errors.title_required")
-    .max(100, "errors.title_too_long"),
-  color: z.string().optional(),
-  favorites: z.boolean().optional(),
-  order: z.number().optional(),
+import { Type } from "@sinclair/typebox";
+export const CreateProjectSchema = Type.Object({
+  title: Type.String({
+    minLength: 1,
+    maxLength: 100,
+    errorMessage: { minLength: "errors.title_required" },
+  }),
+  color: Type.Optional(Type.String({ default: "#8c8c8c" })),
+  favorites: Type.Optional(Type.Boolean({ default: false })),
+  order: Type.Optional(Type.Number({ default: 0 })),
 });
 
-export const UpdateProjectSchema = CreateProjectSchema.partial();
+export const ProjectResponseSchema = Type.Object({
+  id: Type.String(),
+  title: Type.String(),
+  color: Type.String(),
+  favorites: Type.Boolean(),
+  order: Type.Number(),
+  userId: Type.String(),
+});
 
-export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
-export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;
+export const UpdateProjectSchema = Type.Partial(CreateProjectSchema);
