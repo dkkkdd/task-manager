@@ -6,7 +6,7 @@ export const CreateTaskSchema = Type.Object({
     maxLength: 170,
     errorMessage: { minLength: "errors.title_required" },
   }),
-  comment: Type.Optional(Type.String()),
+  comment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
   isDone: Type.Optional(Type.Boolean({ default: false })),
   deadline: Type.Optional(
     Type.Union([Type.String({ format: "date-time" }), Type.Null()]),
@@ -16,10 +16,6 @@ export const CreateTaskSchema = Type.Object({
       default: 1,
       minimum: 1,
       maximum: 4,
-      errorMessage: {
-        minimum: "errors.priority_min",
-        maximum: "errors.priority_max",
-      },
     }),
   ),
   sectionId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
@@ -28,7 +24,7 @@ export const CreateTaskSchema = Type.Object({
   order: Type.Optional(Type.Number({ default: 0 })),
 });
 
-export const TaskResponseSchema = Type.Object({
+const TaskBase = {
   id: Type.String(),
   title: Type.String(),
   comment: Type.Optional(Type.Union([Type.String(), Type.Null()])),
@@ -41,6 +37,15 @@ export const TaskResponseSchema = Type.Object({
   order: Type.Number(),
   userId: Type.String(),
   createdAt: Type.String(),
-});
+};
+
+export const TaskResponseSchema = Type.Recursive((Self) =>
+  Type.Object({
+    ...TaskBase,
+    subtasks: Type.Optional(Type.Array(Self)),
+  }),
+);
 
 export const UpdateTaskSchema = Type.Partial(CreateTaskSchema);
+
+export type TaskResponse = Static<typeof TaskResponseSchema>;

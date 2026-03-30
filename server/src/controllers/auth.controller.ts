@@ -50,12 +50,10 @@ export async function register(
     setAuthCookie(reply, token);
 
     return reply.code(201).send({
-      user: {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        _count: user._count,
-      },
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      _count: user._count,
     });
   } catch (error) {
     request.log.error(error);
@@ -82,7 +80,7 @@ export async function getMe(request: FastifyRequest, reply: FastifyReply) {
         _count: {
           select: {
             projects: true,
-            tasks: { where: { isDone: false } },
+            tasks: true,
           },
         },
       },
@@ -122,12 +120,10 @@ export async function login(
     setAuthCookie(reply, token);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-        _count: user._count,
-      },
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      _count: user._count,
     };
   } catch (error) {
     return reply.code(500).send({ error: "Internal server error" });
@@ -154,6 +150,9 @@ export async function updateMe(
         email: true,
         userName: true,
         createdAt: true,
+        _count: {
+          select: { projects: true, tasks: true },
+        },
       },
     });
 

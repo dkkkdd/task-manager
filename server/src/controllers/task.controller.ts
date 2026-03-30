@@ -194,6 +194,12 @@ export const updateTask = async (
         : { disconnect: true };
     }
 
+    if (data.parentId !== undefined) {
+      updateData.parent = data.parentId
+        ? { connect: { id: data.parentId } }
+        : { disconnect: true };
+    }
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId, userId },
       data: updateData,

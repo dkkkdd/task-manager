@@ -15,6 +15,12 @@ export const UserResponseSchema = Type.Object({
   id: Type.String(),
   email: Type.String(),
   userName: Type.String(),
+  _count: Type.Optional(
+    Type.Object({
+      projects: Type.Number(),
+      tasks: Type.Number(),
+    }),
+  ),
 });
 
 export const UpdateUserSchema = Type.Partial(CreateUserSchema);
