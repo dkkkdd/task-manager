@@ -19,5 +19,4 @@ export type TaskFormData = {
   priority: number;
   projectId: string | null;
   deadline: string | null;
-  reminderAt: string | null;
 };

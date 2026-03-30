@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useModeStore } from "@/stores/useModesStore";
 import { useTasksStore } from "@/stores/useTasksStore";
-import { combineDateAndTime } from "@/utils/dateFormatters";
-import { format } from "date-fns";
 import type { Task, TaskFormData } from "@/types/tasks";
 
 interface UseTaskFormProps {
@@ -44,7 +42,6 @@ export const useTaskFormLogic = ({
       priority: 1,
       projectId: selectedProjectId ?? null,
       deadline: finalDeadline,
-      reminderAt: null,
     };
   }, [mode, selectedProjectId]);
 
@@ -53,17 +50,12 @@ export const useTaskFormLogic = ({
   useEffect(() => {
     if (openForm) {
       if (formMode === "edit" && initiaTask) {
-        const initialTime = initiaTask.deadline
-          ? format(new Date(initiaTask.deadline), "HH:mm")
-          : null;
-
         setFormData({
           title: initiaTask.title,
           comment: initiaTask.comment ?? "",
           priority: initiaTask.priority,
           projectId: initiaTask.projectId || null,
           deadline: initiaTask.deadline,
-          reminderAt: initialTime,
         });
       } else {
         setFormData(getEmptyState());
@@ -79,14 +71,8 @@ export const useTaskFormLogic = ({
 
     setIsSubmitting(true);
     try {
-      const finalDeadline = combineDateAndTime(
-        formData.deadline,
-        formData.reminderAt || null,
-      );
-
       const payload = {
         ...formData,
-        deadline: finalDeadline,
         parentId: formMode === "edit" ? initiaTask?.parentId : parentId || null,
       };
 

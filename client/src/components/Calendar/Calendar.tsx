@@ -39,21 +39,13 @@ const Calendar = ({ date, setDate, setIsCalOpen, children }: CalendarProps) => {
   const { t, i18n } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  // const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
   const dateObj = useMemo(() => (date ? new Date(date) : null), [date]);
   const [selectedTime, setSelectedTime] = useState<string | null>(() => {
     if (!dateObj) return null;
     const timeStr = dateObj.toTimeString().slice(0, 5);
     return timeStr === "23:59" ? null : timeStr;
   });
-
-  // useEffect(() => {
-  //   if (open && dateObj) {
-  //     if (!date) setSelectedTime(null);
-  //     const timeStr = dateObj.toTimeString().slice(0, 5);
-  //     setSelectedTime(timeStr === "23:59" ? null : timeStr);
-  //   }
-  // }, [open, dateObj, date]);
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
